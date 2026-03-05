@@ -1,0 +1,12 @@
+# Ignore Products subdirectory (separate project)
+Products/
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Development files
+.github/
+.husky/
+.vscode/
