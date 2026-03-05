@@ -1,0 +1,20 @@
+# Optimized Playwright image
+FROM mcr.microsoft.com/playwright:v1.48.0-focal
+
+WORKDIR /app
+
+# Install dependencies separately for caching
+COPY package.json package-lock.json ./
+RUN npm install --production
+
+# Copy core files
+COPY worker.js .
+COPY .env .
+
+# Environment Defaults
+ENV TARGET_URL="https://www.youtube.com"
+ENV THREADS=1
+ENV PROXY=""
+
+# Run the worker script directly to save overhead
+CMD ["node", "worker.js"]

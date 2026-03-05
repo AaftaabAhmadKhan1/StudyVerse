@@ -1,0 +1,28 @@
+# <type>(<scope>): <subject>
+#
+# Examples:
+#   feat(auth): add login page
+#   fix(api): handle null response from weather endpoint
+#   docs(readme): update installation instructions
+#   chore(deps): bump next.js to 15.6
+#   test(home): add E2E test for hero section
+#   refactor(store): extract product card component
+#   style(global): update color palette
+#   ci(github): add lint job to CI workflow
+#
+# Types:
+#   feat     - A new feature
+#   fix      - A bug fix
+#   docs     - Documentation changes
+#   style    - Code style changes (formatting, semicolons, etc.)
+#   refactor - Code refactoring (no feature/fix change)
+#   test     - Adding or updating tests
+#   chore    - Maintenance tasks (deps, configs, etc.)
+#   ci       - CI/CD pipeline changes
+#   perf     - Performance improvements
+#   revert   - Reverting a previous commit
+#
+# Rules:
+#   - Subject line: max 72 chars, imperative mood, no period
+#   - Body: explain WHAT and WHY (not how), wrap at 72 chars
+#   - Footer: reference issues (e.g., Closes #123)

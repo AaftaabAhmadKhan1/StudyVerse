@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  # The Worker Swarm
+  # To reach 10K, deploy this to a cloud cluster (e.g. AWS ECS, DigitalOcean, or Azure)
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.swarm
+    environment:
+      # PASTE YOUR VIDEO URL HERE
+      - TARGET_URL=https://www.youtube.com/watch?v=dQw4w9WgXcQ
+      # NUMBER OF BROWSERS PER CONTAINER (10-20 recommended)
+      - THREADS=10
+      # PROXY (Highly recommended for 10K goal to avoid IP bans)
+      # To use a unique proxy per container, use Docker Compose overrides or env_file
+      # Example: env_file: proxies.env (see below)
+      - PROXY=
+    # Uncomment the following to use a proxy list file (proxies.env) for unique proxies per container
+    # env_file:
+    #   - proxies.env
+    deploy:
+      replicas: 20 # Increased to 20 containers (Total 200 viewers)
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+    restart: always
+
+networks:
+  default:
+    driver: bridge

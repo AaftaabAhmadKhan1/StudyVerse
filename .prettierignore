@@ -1,0 +1,8 @@
+node_modules
+.next
+coverage
+build
+out
+package-lock.json
+*.min.js
+*.min.css
