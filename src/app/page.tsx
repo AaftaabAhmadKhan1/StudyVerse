@@ -1,14 +1,26 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
-import { Play, Tv, Flame, Radio, BookOpen, ArrowRight, Sparkles, Zap, Eye, Clock, Loader2, Volume2, VolumeX, ChevronUp, ChevronDown } from 'lucide-react';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import {
+  Play,
+  Tv,
+  Flame,
+  Radio,
+  BookOpen,
+  ArrowRight,
+  Sparkles,
+  Zap,
+  Eye,
+  Loader2,
+} from 'lucide-react';
 import Link from 'next/link';
 import Navigation from '@/components/Navigation';
 import FooterNew from '@/components/FooterNew';
 import ChannelCard from '@/components/ChannelCard';
 import AnnouncementBanner from '@/components/AnnouncementBanner';
 import { useYTWallah } from '@/contexts/YTWallahContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 // YT video type matching API response
 interface FetchedVideo {
@@ -31,12 +43,21 @@ interface FetchedVideo {
 
 export default function Home() {
   const { channels, announcements, siteSettings, batches, mounted } = useYTWallah();
+  const { isAuthenticated } = useAuth();
   const { scrollY } = useScroll();
   const y1 = useTransform(scrollY, [0, 1200], [0, 400]);
   const y2 = useTransform(scrollY, [0, 1200], [0, -300]);
 
-  const globalAnnouncements = announcements.filter(a => a.type === 'global' && a.isActive);
-  const activeChannels = channels.filter(c => c.isActive);
+  const globalAnnouncements = announcements.filter((a) => a.type === 'global' && a.isActive);
+  const activeChannels = channels.filter((c) => c.isActive);
+
+  // User's subscribed channels
+  interface UserChannelInfo {
+    youtubeChannelId: string;
+    channelName: string;
+  }
+  const [userChannels, setUserChannels] = useState<UserChannelInfo[]>([]);
+  const [userChannelsLoaded, setUserChannelsLoaded] = useState(false);
 
   // Fetched YouTube content from ALL channels
   const [allVideos, setAllVideos] = useState<FetchedVideo[]>([]);
@@ -46,12 +67,41 @@ export default function Home() {
   const [contentLoaded, setContentLoaded] = useState(false);
 
   // Shorts reel state
-  const [currentShortIdx, setCurrentShortIdx] = useState(0);
+  // Removed unused currentShortIdx and setCurrentShortIdx
   const shortsContainerRef = useRef<HTMLDivElement>(null);
 
-  // Fetch content from all active channels
+  // Fetch user's subscribed channels when authenticated
+  useEffect(() => {
+    if (!mounted || !isAuthenticated) {
+      setUserChannelsLoaded(true);
+      return;
+    }
+    (async () => {
+      try {
+        const res = await fetch('/api/user/channels');
+        const data = await res.json();
+        if (res.ok) setUserChannels(data.channels || []);
+      } catch {
+        /* ignore */
+      }
+      setUserChannelsLoaded(true);
+    })();
+  }, [mounted, isAuthenticated]);
+
+  // Determine which channels to fetch content from
+  // If user is logged in and has subscribed channels, use those; otherwise use all active (admin) channels
+  const hasPersonalChannels = isAuthenticated && userChannels.length > 0;
+
+  // Fetch content from channels
   const fetchAllChannelContent = useCallback(async () => {
-    if (!siteSettings.youtubeApiKey || activeChannels.length === 0 || contentLoaded) return;
+    if (!siteSettings.youtubeApiKey || contentLoaded || !userChannelsLoaded) return;
+
+    // Build the list of channels to fetch
+    const channelsToFetch = hasPersonalChannels
+      ? userChannels.map((uc) => ({ youtubeChannelId: uc.youtubeChannelId, name: uc.channelName }))
+      : activeChannels.map((ch) => ({ youtubeChannelId: ch.youtubeChannelId, name: ch.name }));
+
+    if (channelsToFetch.length === 0) return;
     setContentLoading(true);
 
     const vids: FetchedVideo[] = [];
@@ -59,25 +109,30 @@ export default function Home() {
     const lives: FetchedVideo[] = [];
 
     await Promise.allSettled(
-      activeChannels.map(async (ch) => {
+      channelsToFetch.map(async (ch) => {
         try {
           const res = await fetch('/api/youtube/channel-content', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ channelId: ch.youtubeChannelId, apiKey: siteSettings.youtubeApiKey }),
+            body: JSON.stringify({
+              channelId: ch.youtubeChannelId,
+              apiKey: siteSettings.youtubeApiKey,
+            }),
           });
           const data = await res.json();
           if (res.ok) {
-            const tag = (arr: FetchedVideo[]) => arr.map(v => ({ ...v, channelName: ch.name }));
+            const tag = (arr: FetchedVideo[]) => arr.map((v) => ({ ...v, channelName: ch.name }));
             vids.push(...tag(data.videos || []));
             shrts.push(...tag(data.shorts || []));
             lives.push(...tag(data.liveStreams || []), ...tag(data.upcomingLives || []));
           }
-        } catch { /* skip failed channels */ }
+        } catch {
+          /* skip failed channels */
+        }
       })
     );
 
-    // Sort videos by date (newest first), shuffle for "random pick" feel using Fisher-Yates
+    // Sort videos by date (newest first)
     vids.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
     shrts.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
     // Keep currently-live at top, then upcoming, then past
@@ -94,15 +149,22 @@ export default function Home() {
     setAllLive(lives);
     setContentLoaded(true);
     setContentLoading(false);
-  }, [activeChannels, siteSettings.youtubeApiKey, contentLoaded]);
+  }, [
+    activeChannels,
+    userChannels,
+    hasPersonalChannels,
+    siteSettings.youtubeApiKey,
+    contentLoaded,
+    userChannelsLoaded,
+  ]);
 
   useEffect(() => {
-    if (mounted && !contentLoaded) fetchAllChannelContent();
-  }, [mounted, contentLoaded, fetchAllChannelContent]);
+    if (mounted && !contentLoaded && userChannelsLoaded) fetchAllChannelContent();
+  }, [mounted, contentLoaded, userChannelsLoaded, fetchAllChannelContent]);
 
   // Pick latest videos (mix from all channels, up to 12)
   const latestVideos = allVideos.slice(0, 12);
-  const currentLive = allLive.filter(v => v.isLive);
+  const currentLive = allLive.filter((v) => v.isLive);
   const shortsForReel = allShorts.slice(0, 20);
 
   // Hydration-safe random
@@ -123,18 +185,18 @@ export default function Home() {
               style={{ y: y1 }}
               className="absolute top-20 -left-20 w-96 h-96 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-3xl"
               animate={{ x: [0, 100, 0], scale: [1, 1.2, 1] }}
-              transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+              transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
             />
             <motion.div
               style={{ y: y2 }}
               className="absolute bottom-20 -right-20 w-[500px] h-[500px] bg-gradient-to-l from-purple-500/20 to-pink-500/20 rounded-full blur-3xl"
               animate={{ x: [0, -100, 0], scale: [1, 1.3, 1] }}
-              transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
+              transition={{ duration: 25, repeat: Infinity, ease: 'easeInOut' }}
             />
             <motion.div
               className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-tr from-blue-500/10 to-cyan-500/10 rounded-full blur-3xl"
               animate={{ rotate: 360, scale: [1, 1.1, 1] }}
-              transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+              transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
             />
             {/* Floating particles */}
             {[...Array(15)].map((_, i) => (
@@ -146,7 +208,11 @@ export default function Home() {
                   top: `${(seededRandom(i + 100) * 100).toFixed(8)}%`,
                 }}
                 animate={{ y: [0, -30, 0], opacity: [0.2, 0.8, 0.2] }}
-                transition={{ duration: 3 + seededRandom(i + 200) * 2, repeat: Infinity, delay: seededRandom(i + 300) * 2 }}
+                transition={{
+                  duration: 3 + seededRandom(i + 200) * 2,
+                  repeat: Infinity,
+                  delay: seededRandom(i + 300) * 2,
+                }}
               />
             ))}
           </div>
@@ -175,7 +241,8 @@ export default function Home() {
                 YT
               </span>
               <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
-                {' '}Wallah
+                {' '}
+                Wallah
               </span>
             </motion.h1>
 
@@ -226,7 +293,11 @@ export default function Home() {
             >
               {[
                 { label: 'Channels', value: activeChannels.length, icon: Tv },
-                { label: 'Batches', value: batches.filter(b => b.isActive).length, icon: BookOpen },
+                {
+                  label: 'Batches',
+                  value: batches.filter((b) => b.isActive).length,
+                  icon: BookOpen,
+                },
                 { label: 'Videos', value: allVideos.length, icon: Play },
               ].map((stat) => (
                 <div key={stat.label} className="text-center">
@@ -246,6 +317,42 @@ export default function Home() {
           </section>
         )}
 
+        {/* Personalization Banner */}
+        {isAuthenticated && userChannelsLoaded && (
+          <section className="px-6 py-4 max-w-7xl mx-auto">
+            {hasPersonalChannels ? (
+              <div className="flex items-center justify-between px-4 py-3 bg-purple-500/10 border border-purple-500/20 rounded-xl">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-purple-400" />
+                  <span className="text-sm text-purple-300">
+                    Showing content from your <strong>{userChannels.length}</strong> subscribed
+                    channel{userChannels.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+                <Link
+                  href="/my-channels"
+                  className="text-xs text-purple-400 hover:text-purple-300 font-medium"
+                >
+                  Manage →
+                </Link>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between px-4 py-3 bg-white/5 border border-white/10 rounded-xl">
+                <span className="text-sm text-white/40">
+                  Add channels to get personalized recommendations
+                </span>
+                <Link
+                  href="/my-channels"
+                  className="text-xs text-purple-400 hover:text-purple-300 font-medium flex items-center gap-1"
+                >
+                  <Sparkles className="w-3 h-3" />
+                  Add Channels
+                </Link>
+              </div>
+            )}
+          </section>
+        )}
+
         {/* Channels Section */}
         {activeChannels.length > 0 && (
           <section className="px-6 py-12 max-w-7xl mx-auto">
@@ -254,7 +361,10 @@ export default function Home() {
                 <h2 className="text-2xl font-bold text-white">PW Channels</h2>
                 <p className="text-sm text-white/40 mt-1">All Physics Wallah YouTube channels</p>
               </div>
-              <Link href="/channels" className="text-sm text-purple-400 hover:text-purple-300 font-medium flex items-center gap-1">
+              <Link
+                href="/channels"
+                className="text-sm text-purple-400 hover:text-purple-300 font-medium flex items-center gap-1"
+              >
                 View All <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
@@ -283,17 +393,30 @@ export default function Home() {
                   <p className="text-sm text-white/40 mt-1">Currently streaming on PW channels</p>
                 </div>
               </div>
-              <Link href="/live" className="text-sm text-red-400 hover:text-red-300 font-medium flex items-center gap-1">
+              <Link
+                href="/live"
+                className="text-sm text-red-400 hover:text-red-300 font-medium flex items-center gap-1"
+              >
                 See All <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {currentLive.slice(0, 4).map((v) => (
                 <Link key={v.id} href={`/watch/${v.id}`}>
-                  <motion.div whileHover={{ y: -4 }} className="group bg-[#0f0a1f]/80 border border-red-500/10 rounded-2xl overflow-hidden hover:border-red-500/30 transition-all">
+                  <motion.div
+                    whileHover={{ y: -4 }}
+                    className="group bg-[#0f0a1f]/80 border border-red-500/10 rounded-2xl overflow-hidden hover:border-red-500/30 transition-all"
+                  >
                     <div className="relative aspect-video bg-[#1a1035] overflow-hidden">
-                      <img src={v.thumbnailUrl} alt={v.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        onError={e => { (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${v.id}/hqdefault.jpg`; }} />
+                      <img
+                        src={v.thumbnailUrl}
+                        alt={v.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src =
+                            `https://img.youtube.com/vi/${v.id}/hqdefault.jpg`;
+                        }}
+                      />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                       <span className="absolute top-2 left-2 px-2.5 py-1 bg-red-600 rounded-lg text-xs text-white font-bold flex items-center gap-1.5 shadow-lg shadow-red-500/30">
                         <span className="relative flex h-2 w-2">
@@ -304,8 +427,12 @@ export default function Home() {
                       </span>
                     </div>
                     <div className="p-4">
-                      <h3 className="text-sm font-semibold text-white line-clamp-2 group-hover:text-red-300 transition-colors">{v.title}</h3>
-                      {v.channelName && <p className="text-[11px] text-white/30 mt-1">{v.channelName}</p>}
+                      <h3 className="text-sm font-semibold text-white line-clamp-2 group-hover:text-red-300 transition-colors">
+                        {v.title}
+                      </h3>
+                      {v.channelName && (
+                        <p className="text-[11px] text-white/30 mt-1">{v.channelName}</p>
+                      )}
                     </div>
                   </motion.div>
                 </Link>
@@ -333,28 +460,55 @@ export default function Home() {
                 <Zap className="w-6 h-6 text-yellow-400" />
                 <div>
                   <h2 className="text-2xl font-bold text-white">Latest Videos</h2>
-                  <p className="text-sm text-white/40 mt-1">Recent uploads from all channels</p>
+                  <p className="text-sm text-white/40 mt-1">
+                    {hasPersonalChannels
+                      ? 'From your subscribed channels'
+                      : 'Recent uploads from all channels'}
+                  </p>
                 </div>
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {latestVideos.map((v) => (
                 <Link key={v.id} href={`/watch/${v.id}`}>
-                  <motion.div whileHover={{ y: -4 }} className="group bg-[#0f0a1f]/80 border border-purple-500/10 rounded-2xl overflow-hidden hover:border-purple-500/30 transition-all">
+                  <motion.div
+                    whileHover={{ y: -4 }}
+                    className="group bg-[#0f0a1f]/80 border border-purple-500/10 rounded-2xl overflow-hidden hover:border-purple-500/30 transition-all"
+                  >
                     <div className="relative aspect-video bg-[#1a1035] overflow-hidden">
-                      <img src={v.thumbnailUrl} alt={v.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        onError={e => { (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${v.id}/hqdefault.jpg`; }} />
+                      <img
+                        src={v.thumbnailUrl}
+                        alt={v.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src =
+                            `https://img.youtube.com/vi/${v.id}/hqdefault.jpg`;
+                        }}
+                      />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <div className="w-12 h-12 bg-purple-600/90 rounded-full flex items-center justify-center shadow-lg"><Play className="w-5 h-5 text-white fill-white ml-0.5" /></div>
+                        <div className="w-12 h-12 bg-purple-600/90 rounded-full flex items-center justify-center shadow-lg">
+                          <Play className="w-5 h-5 text-white fill-white ml-0.5" />
+                        </div>
                       </div>
-                      {v.duration && <span className="absolute bottom-2 right-2 px-1.5 py-0.5 bg-black/80 rounded text-[11px] text-white font-medium">{v.duration}</span>}
+                      {v.duration && (
+                        <span className="absolute bottom-2 right-2 px-1.5 py-0.5 bg-black/80 rounded text-[11px] text-white font-medium">
+                          {v.duration}
+                        </span>
+                      )}
                     </div>
                     <div className="p-4">
-                      <h3 className="text-sm font-semibold text-white line-clamp-2 group-hover:text-purple-300 transition-colors">{v.title}</h3>
+                      <h3 className="text-sm font-semibold text-white line-clamp-2 group-hover:text-purple-300 transition-colors">
+                        {v.title}
+                      </h3>
                       <div className="flex items-center gap-3 mt-2 text-[11px] text-white/30">
-                        {v.channelName && <span className="text-purple-400/60">{v.channelName}</span>}
-                        <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{v.viewCount}</span>
+                        {v.channelName && (
+                          <span className="text-purple-400/60">{v.channelName}</span>
+                        )}
+                        <span className="flex items-center gap-1">
+                          <Eye className="w-3 h-3" />
+                          {v.viewCount}
+                        </span>
                       </div>
                     </div>
                   </motion.div>
@@ -375,7 +529,10 @@ export default function Home() {
                   <p className="text-sm text-white/40 mt-1">Quick bites from PW channels</p>
                 </div>
               </div>
-              <Link href="/shorts" className="text-sm text-orange-400 hover:text-orange-300 font-medium flex items-center gap-1">
+              <Link
+                href="/shorts"
+                className="text-sm text-orange-400 hover:text-orange-300 font-medium flex items-center gap-1"
+              >
                 View All <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
@@ -387,14 +544,21 @@ export default function Home() {
                 className="flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-2"
                 style={{ scrollBehavior: 'smooth' }}
               >
-                {shortsForReel.map((short, idx) => (
-                  <Link key={short.id} href={`/shorts/${short.id}`} className="snap-start flex-shrink-0">
+                {shortsForReel.map((short) => (
+                  <Link
+                    key={short.id}
+                    href={`/shorts/${short.id}`}
+                    className="snap-start flex-shrink-0"
+                  >
                     <motion.div
                       whileHover={{ y: -4, scale: 1.02 }}
                       className="relative w-[160px] sm:w-[180px] aspect-[9/16] rounded-2xl overflow-hidden border border-purple-500/10 group"
                     >
                       <img
-                        src={short.thumbnailUrl || `https://img.youtube.com/vi/${short.id}/mqdefault.jpg`}
+                        src={
+                          short.thumbnailUrl ||
+                          `https://img.youtube.com/vi/${short.id}/mqdefault.jpg`
+                        }
                         alt={short.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
@@ -406,10 +570,19 @@ export default function Home() {
                         </div>
                       </div>
                       <div className="absolute bottom-0 left-0 right-0 p-2.5">
-                        <p className="text-xs font-semibold text-white line-clamp-2 leading-tight">{short.title}</p>
+                        <p className="text-xs font-semibold text-white line-clamp-2 leading-tight">
+                          {short.title}
+                        </p>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[10px] text-white/40 flex items-center gap-0.5"><Eye className="w-2.5 h-2.5" />{short.viewCount}</span>
-                          {short.channelName && <span className="text-[10px] text-orange-400/60 truncate">{short.channelName}</span>}
+                          <span className="text-[10px] text-white/40 flex items-center gap-0.5">
+                            <Eye className="w-2.5 h-2.5" />
+                            {short.viewCount}
+                          </span>
+                          {short.channelName && (
+                            <span className="text-[10px] text-orange-400/60 truncate">
+                              {short.channelName}
+                            </span>
+                          )}
                         </div>
                       </div>
                       <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-orange-500 rounded-md text-[10px] text-white font-bold">
@@ -434,7 +607,9 @@ export default function Home() {
           <section className="px-6 py-24 text-center max-w-2xl mx-auto">
             <Tv className="w-16 h-16 text-white/10 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-white mb-2">No Content Yet</h2>
-            <p className="text-white/40 mb-6">Channels and videos will appear here once added by the admin.</p>
+            <p className="text-white/40 mb-6">
+              Channels and videos will appear here once added by the admin.
+            </p>
             <Link href="/admin/login" className="text-purple-400 hover:text-purple-300 font-medium">
               Go to Admin Panel →
             </Link>

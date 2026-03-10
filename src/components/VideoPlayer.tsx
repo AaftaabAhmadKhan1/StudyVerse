@@ -3,11 +3,33 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  MessageSquare, StickyNote, ThumbsUp, Share2, Bell,
-  ChevronDown, ChevronUp, Maximize2, Minimize2, BookOpen, Plus,
-  Trash2, Clock, Eye, Loader2, Heart, Send,
-  Play, Pause, Volume1, Volume2, VolumeX, SkipBack, SkipForward,
-  Settings, Subtitles, Gauge, PictureInPicture2, Check, X,
+  MessageSquare,
+  StickyNote,
+  ThumbsUp,
+  Share2,
+  Bell,
+  ChevronDown,
+  ChevronUp,
+  Maximize2,
+  Minimize2,
+  BookOpen,
+  Plus,
+  Trash2,
+  Clock,
+  Eye,
+  Loader2,
+  Play,
+  Pause,
+  Volume1,
+  Volume2,
+  VolumeX,
+  SkipBack,
+  SkipForward,
+  Settings,
+  Subtitles,
+  Gauge,
+  PictureInPicture2,
+  Check,
 } from 'lucide-react';
 import { Video } from '@/data/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -56,7 +78,7 @@ export default function VideoPlayer({ video }: Props) {
   const [isTheaterMode, setIsTheaterMode] = useState(false);
   const [noteText, setNoteText] = useState('');
   const [currentTime, setCurrentTime] = useState(0);
-  const { user, isAuthenticated, addNote, getNotesForVideo, deleteNote } = useAuth();
+  const { isAuthenticated, addNote, getNotesForVideo, deleteNote } = useAuth();
   const { channels, batches, siteSettings } = useYTWallah();
 
   // ---- Custom player state ----
@@ -73,18 +95,20 @@ export default function VideoPlayer({ video }: Props) {
   const [playerVolume, setPlayerVolume] = useState(100);
   const [isMuted, setIsMuted] = useState(false);
   const [showControls, setShowControls] = useState(true);
-  const [isFullscreenMode, setIsFullscreenMode] = useState(false);
+  // Removed unused variable isFullscreenMode
   const [buffered, setBuffered] = useState(0);
   const [showPlayIndicator, setShowPlayIndicator] = useState<'play' | 'pause' | null>(null);
   const [playerReady, setPlayerReady] = useState(false);
 
   // ---- Settings menu state ----
   const [showSettings, setShowSettings] = useState(false);
-  const [settingsPanel, setSettingsPanel] = useState<'main' | 'quality' | 'speed' | 'captions'>('main');
+  const [settingsPanel, setSettingsPanel] = useState<'main' | 'quality' | 'speed' | 'captions'>(
+    'main'
+  );
   const [availableQualities, setAvailableQualities] = useState<string[]>([]);
   const [currentQuality, setCurrentQuality] = useState('auto');
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
-  const [captionTracks, setCaptionTracks] = useState<{lang: string; name: string}[]>([]);
+  const [captionTracks, setCaptionTracks] = useState<{ lang: string; name: string }[]>([]);
   const [captionsEnabled, setCaptionsEnabled] = useState(false);
   const [currentCaptionLang, setCurrentCaptionLang] = useState('');
   const settingsRef = useRef<HTMLDivElement>(null);
@@ -103,8 +127,8 @@ export default function VideoPlayer({ video }: Props) {
   // User reactions (local state — toggling visual only)
   const [liked, setLiked] = useState(false);
 
-  const channel = channels.find(c => c.id === video.channelId);
-  const batch = batches.find(b => b.id === video.batchId);
+  const channel = channels.find((c) => c.id === video.channelId);
+  const batch = batches.find((b) => b.id === video.batchId);
   const notes = getNotesForVideo(video.id);
   const isLive = video.isLive || video.type === 'live';
   const ytId = video.youtubeVideoId;
@@ -115,7 +139,7 @@ export default function VideoPlayer({ video }: Props) {
   const description = ytInfo?.description || video.description || '';
   const channelName = channel?.name || ytInfo?.channelTitle || '';
 
-  const liveChatUrl = `https://www.youtube.com/live_chat?v=${ytId}&embed_domain=${typeof window !== 'undefined' ? window.location.hostname : ''}`;
+  const liveChatUrl = `https://www.youtube.com/live_chat?v=${ytId}&embed_domain=${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}`;
 
   // ---------- Fetch video info ----------
   const fetchVideoInfo = useCallback(async () => {
@@ -141,34 +165,43 @@ export default function VideoPlayer({ video }: Props) {
           tags: data.tags,
         });
       }
-    } catch { /* silent */ }
+    } catch {
+      /* silent */
+    }
     setYtInfoLoading(false);
   }, [ytId, apiKey]);
 
   // ---------- Fetch comments ----------
-  const fetchComments = useCallback(async (pageToken?: string) => {
-    if (!ytId || !apiKey) return;
-    setCommentsLoading(true);
-    try {
-      const res = await fetch('/api/youtube/comments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ videoId: ytId, apiKey, pageToken }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        if (data.disabled) {
-          setCommentsDisabled(true);
-        } else {
-          setComments(prev => pageToken ? [...prev, ...data.comments] : data.comments);
-          setNextPageToken(data.nextPageToken);
+  const fetchComments = useCallback(
+    async (pageToken?: string) => {
+      if (!ytId || !apiKey) return;
+      setCommentsLoading(true);
+      try {
+        const res = await fetch('/api/youtube/comments', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ videoId: ytId, apiKey, pageToken }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          if (data.disabled) {
+            setCommentsDisabled(true);
+          } else {
+            setComments((prev) => (pageToken ? [...prev, ...data.comments] : data.comments));
+            setNextPageToken(data.nextPageToken);
+          }
         }
+      } catch {
+        /* silent */
       }
-    } catch { /* silent */ }
-    setCommentsLoading(false);
-  }, [ytId, apiKey]);
+      setCommentsLoading(false);
+    },
+    [ytId, apiKey]
+  );
 
-  useEffect(() => { fetchVideoInfo(); }, [fetchVideoInfo]);
+  useEffect(() => {
+    fetchVideoInfo();
+  }, [fetchVideoInfo]);
 
   // Fetch comments when user switches to comments tab
   useEffect(() => {
@@ -192,9 +225,11 @@ export default function VideoPlayer({ video }: Props) {
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
-  const toggleLike = () => { setLiked(!liked); };
+  const toggleLike = () => {
+    setLiked(!liked);
+  };
   const toggleReplies = (id: string) => {
-    setExpandedReplies(prev => {
+    setExpandedReplies((prev) => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
@@ -204,7 +239,11 @@ export default function VideoPlayer({ video }: Props) {
   const handleShare = async () => {
     const url = typeof window !== 'undefined' ? window.location.href : '';
     if (navigator.share) {
-      try { await navigator.share({ title, url }); } catch { /* cancelled */ }
+      try {
+        await navigator.share({ title, url });
+      } catch {
+        /* cancelled */
+      }
     } else {
       await navigator.clipboard.writeText(url);
     }
@@ -228,9 +267,17 @@ export default function VideoPlayer({ video }: Props) {
       player = new (window as any).YT.Player(el, {
         videoId: ytId,
         playerVars: {
-          autoplay: 1, controls: 0, modestbranding: 1, rel: 0,
-          showinfo: 0, iv_load_policy: 3, disablekb: 1, fs: 0,
-          playsinline: 1, enablejsapi: 1, cc_load_policy: 0,
+          autoplay: 1,
+          controls: 0,
+          modestbranding: 1,
+          rel: 0,
+          showinfo: 0,
+          iv_load_policy: 3,
+          disablekb: 1,
+          fs: 0,
+          playsinline: 1,
+          enablejsapi: 1,
+          cc_load_policy: 0,
           origin: window.location.origin,
         },
         events: {
@@ -255,7 +302,10 @@ export default function VideoPlayer({ video }: Props) {
           onStateChange: (e: any) => {
             if (!mounted) return;
             setIsPlaying(e.data === 1);
-            if (e.data === 0) { setIsPlaying(false); setShowControls(true); }
+            if (e.data === 0) {
+              setIsPlaying(false);
+              setShowControls(true);
+            }
             // Refresh available qualities when video plays
             if (e.data === 1 && ytPlayerRef.current) {
               try {
@@ -263,7 +313,9 @@ export default function VideoPlayer({ video }: Props) {
                 if (qs?.length) setAvailableQualities(qs);
                 const cq = ytPlayerRef.current.getPlaybackQuality();
                 if (cq) setCurrentQuality(cq);
-              } catch { /* noop */ }
+              } catch {
+                /* noop */
+              }
             }
           },
           onPlaybackQualityChange: (e: any) => {
@@ -278,7 +330,11 @@ export default function VideoPlayer({ video }: Props) {
     return () => {
       mounted = false;
       if (poller) clearInterval(poller);
-      try { player?.destroy?.(); } catch { /* noop */ }
+      try {
+        player?.destroy?.();
+      } catch {
+        /* noop */
+      }
       ytPlayerRef.current = null;
       setPlayerReady(false);
     };
@@ -299,35 +355,57 @@ export default function VideoPlayer({ video }: Props) {
     setProgress(t);
   }, []);
 
-  const seekRelative = useCallback((d: number) => {
-    if (!ytPlayerRef.current) return;
-    const t = Math.max(0, Math.min(ytPlayerRef.current.getCurrentTime() + d, duration));
-    seekTo(t);
-  }, [duration, seekTo]);
+  const seekRelative = useCallback(
+    (d: number) => {
+      if (!ytPlayerRef.current) return;
+      const t = Math.max(0, Math.min(ytPlayerRef.current.getCurrentTime() + d, duration));
+      seekTo(t);
+    },
+    [duration, seekTo]
+  );
 
-  const handleVolumeChange = useCallback((v: number) => {
-    if (!ytPlayerRef.current) return;
-    ytPlayerRef.current.setVolume(v);
-    setPlayerVolume(v);
-    if (v > 0 && isMuted) { ytPlayerRef.current.unMute(); setIsMuted(false); }
-  }, [isMuted]);
+  const handleVolumeChange = useCallback(
+    (v: number) => {
+      if (!ytPlayerRef.current) return;
+      ytPlayerRef.current.setVolume(v);
+      setPlayerVolume(v);
+      if (v > 0 && isMuted) {
+        ytPlayerRef.current.unMute();
+        setIsMuted(false);
+      }
+    },
+    [isMuted]
+  );
 
   const handleToggleMute = useCallback(() => {
     if (!ytPlayerRef.current) return;
-    if (isMuted) { ytPlayerRef.current.unMute(); setIsMuted(false); }
-    else { ytPlayerRef.current.mute(); setIsMuted(true); }
+    if (isMuted) {
+      ytPlayerRef.current.unMute();
+      setIsMuted(false);
+    } else {
+      ytPlayerRef.current.mute();
+      setIsMuted(true);
+    }
   }, [isMuted]);
 
-  const handleProgressClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (!progressBarRef.current || !duration) return;
-    const rect = progressBarRef.current.getBoundingClientRect();
-    seekTo(((e.clientX - rect.left) / rect.width) * duration);
-  }, [duration, seekTo]);
+  const handleProgressClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (!progressBarRef.current || !duration) return;
+      const rect = progressBarRef.current.getBoundingClientRect();
+      seekTo(((e.clientX - rect.left) / rect.width) * duration);
+    },
+    [duration, seekTo]
+  );
 
   const handleMouseMove = useCallback(() => {
     setShowControls(true);
     if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
-    controlsTimerRef.current = setTimeout(() => { if (isPlaying) { setShowControls(false); setShowSettings(false); } }, 3000);
+    controlsTimerRef.current = setTimeout(() => {
+      if (isPlaying) {
+        setShowControls(false);
+        setShowSettings(false);
+      }
+    }, 3000);
   }, [isPlaying]);
 
   const toggleFullscreenMode = useCallback(() => {
@@ -339,9 +417,16 @@ export default function VideoPlayer({ video }: Props) {
 
   // ===== Quality / Speed / Captions helpers =====
   const qualityLabels: Record<string, string> = {
-    highres: '4320p (8K)', hd2160: '2160p (4K)', hd1440: '1440p',
-    hd1080: '1080p', hd720: '720p', large: '480p',
-    medium: '360p', small: '240p', tiny: '144p', auto: 'Auto',
+    highres: '4320p (8K)',
+    hd2160: '2160p (4K)',
+    hd1440: '1440p',
+    hd1080: '1080p',
+    hd720: '720p',
+    large: '480p',
+    medium: '360p',
+    small: '240p',
+    tiny: '144p',
+    auto: 'Auto',
   };
   const speedOptions = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
 
@@ -362,7 +447,7 @@ export default function VideoPlayer({ video }: Props) {
   const handleToggleCaptions = useCallback(() => {
     if (!ytPlayerRef.current) return;
     try {
-      const mod = ytPlayerRef.current.getModule?.('captions');
+      // Removed unused variable mod
       if (captionsEnabled) {
         ytPlayerRef.current.unloadModule?.('captions');
         setCaptionsEnabled(false);
@@ -378,18 +463,23 @@ export default function VideoPlayer({ video }: Props) {
     setSettingsPanel('main');
   }, [captionsEnabled]);
 
-  const handleSetCaptionLang = useCallback((lang: string) => {
-    if (!ytPlayerRef.current) return;
-    try {
-      ytPlayerRef.current.setOption?.('captions', 'track', { languageCode: lang });
-      setCurrentCaptionLang(lang);
-      if (!captionsEnabled) {
-        ytPlayerRef.current.loadModule?.('captions');
-        setCaptionsEnabled(true);
+  const handleSetCaptionLang = useCallback(
+    (lang: string) => {
+      if (!ytPlayerRef.current) return;
+      try {
+        ytPlayerRef.current.setOption?.('captions', 'track', { languageCode: lang });
+        setCurrentCaptionLang(lang);
+        if (!captionsEnabled) {
+          ytPlayerRef.current.loadModule?.('captions');
+          setCaptionsEnabled(true);
+        }
+      } catch {
+        /* noop */
       }
-    } catch { /* noop */ }
-    setSettingsPanel('main');
-  }, [captionsEnabled]);
+      setSettingsPanel('main');
+    },
+    [captionsEnabled]
+  );
 
   const handlePiP = useCallback(async () => {
     try {
@@ -403,7 +493,9 @@ export default function VideoPlayer({ video }: Props) {
         const video = playerContainerRef.current?.querySelector('video');
         if (video) await video.requestPictureInPicture();
       }
-    } catch { /* PiP not supported or blocked */ }
+    } catch {
+      /* PiP not supported or blocked */
+    }
   }, []);
 
   // Close settings when clicking outside
@@ -425,9 +517,13 @@ export default function VideoPlayer({ video }: Props) {
       try {
         const opts = ytPlayerRef.current.getOption?.('captions', 'tracklist');
         if (opts && Array.isArray(opts) && opts.length > 0) {
-          setCaptionTracks(opts.map((t: any) => ({ lang: t.languageCode, name: t.displayName || t.languageCode })));
+          setCaptionTracks(
+            opts.map((t: any) => ({ lang: t.languageCode, name: t.displayName || t.languageCode }))
+          );
         }
-      } catch { /* noop */ }
+      } catch {
+        /* noop */
+      }
     };
     // Fetch once after a delay (YT needs time to load caption data)
     const timer = setTimeout(fetchCaptionInfo, 2000);
@@ -439,23 +535,74 @@ export default function VideoPlayer({ video }: Props) {
     const h = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       switch (e.key.toLowerCase()) {
-        case ' ': case 'k': e.preventDefault(); togglePlay(); break;
-        case 'f': e.preventDefault(); toggleFullscreenMode(); break;
-        case 'm': e.preventDefault(); handleToggleMute(); break;
-        case 'c': e.preventDefault(); handleToggleCaptions(); break;
-        case 'arrowleft': e.preventDefault(); seekRelative(-5); break;
-        case 'arrowright': e.preventDefault(); seekRelative(5); break;
-        case 'j': e.preventDefault(); seekRelative(-10); break;
-        case 'l': e.preventDefault(); seekRelative(10); break;
-        case 'arrowup': e.preventDefault(); handleVolumeChange(Math.min(100, playerVolume + 5)); break;
-        case 'arrowdown': e.preventDefault(); handleVolumeChange(Math.max(0, playerVolume - 5)); break;
-        case ',': if (e.shiftKey) { e.preventDefault(); handleSetSpeed(Math.max(0.25, playbackSpeed - 0.25)); } break;
-        case '.': if (e.shiftKey) { e.preventDefault(); handleSetSpeed(Math.min(2, playbackSpeed + 0.25)); } break;
+        case ' ':
+        case 'k':
+          e.preventDefault();
+          togglePlay();
+          break;
+        case 'f':
+          e.preventDefault();
+          toggleFullscreenMode();
+          break;
+        case 'm':
+          e.preventDefault();
+          handleToggleMute();
+          break;
+        case 'c':
+          e.preventDefault();
+          handleToggleCaptions();
+          break;
+        case 'arrowleft':
+          e.preventDefault();
+          seekRelative(-5);
+          break;
+        case 'arrowright':
+          e.preventDefault();
+          seekRelative(5);
+          break;
+        case 'j':
+          e.preventDefault();
+          seekRelative(-10);
+          break;
+        case 'l':
+          e.preventDefault();
+          seekRelative(10);
+          break;
+        case 'arrowup':
+          e.preventDefault();
+          handleVolumeChange(Math.min(100, playerVolume + 5));
+          break;
+        case 'arrowdown':
+          e.preventDefault();
+          handleVolumeChange(Math.max(0, playerVolume - 5));
+          break;
+        case ',':
+          if (e.shiftKey) {
+            e.preventDefault();
+            handleSetSpeed(Math.max(0.25, playbackSpeed - 0.25));
+          }
+          break;
+        case '.':
+          if (e.shiftKey) {
+            e.preventDefault();
+            handleSetSpeed(Math.min(2, playbackSpeed + 0.25));
+          }
+          break;
       }
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
-  }, [togglePlay, toggleFullscreenMode, handleToggleMute, handleToggleCaptions, seekRelative, handleVolumeChange, handleSetSpeed, playerVolume, playbackSpeed]);
+  }, [
+    togglePlay,
+    toggleFullscreenMode,
+    handleToggleMute,
+    handleToggleCaptions,
+    seekRelative,
+    handleVolumeChange,
+    handleSetSpeed,
+    playerVolume,
+    playbackSpeed,
+  ]);
 
   // Sync fullscreen state
   useEffect(() => {
@@ -466,7 +613,11 @@ export default function VideoPlayer({ video }: Props) {
 
   const tabs = [
     { id: 'notes' as const, label: 'Notes', icon: StickyNote },
-    { id: 'comments' as const, label: `Comments${ytInfo?.commentCount ? ` (${ytInfo.commentCount})` : ''}`, icon: MessageSquare },
+    {
+      id: 'comments' as const,
+      label: `Comments${ytInfo?.commentCount ? ` (${ytInfo.commentCount})` : ''}`,
+      icon: MessageSquare,
+    },
     ...(isLive ? [{ id: 'chat' as const, label: 'Live Chat', icon: MessageSquare }] : []),
   ];
 
@@ -480,7 +631,9 @@ export default function VideoPlayer({ video }: Props) {
             ref={playerContainerRef}
             className="relative rounded-2xl overflow-hidden shadow-2xl shadow-purple-500/10 border border-purple-500/10 bg-black"
             onMouseMove={handleMouseMove}
-            onMouseLeave={() => { if (isPlaying) setShowControls(false); }}
+            onMouseLeave={() => {
+              if (isPlaying) setShowControls(false);
+            }}
           >
             {/* 16:9 aspect-ratio wrapper */}
             <div className="youtube-container">
@@ -489,7 +642,10 @@ export default function VideoPlayer({ video }: Props) {
               <div
                 className="absolute inset-0 z-10 cursor-pointer"
                 onClick={togglePlay}
-                onDoubleClick={(e) => { e.preventDefault(); toggleFullscreenMode(); }}
+                onDoubleClick={(e) => {
+                  e.preventDefault();
+                  toggleFullscreenMode();
+                }}
               />
             </div>
 
@@ -535,7 +691,10 @@ export default function VideoPlayer({ video }: Props) {
                   className="group/progress relative h-1 hover:h-2 bg-white/20 rounded-full cursor-pointer mb-3 transition-all duration-150"
                   onClick={handleProgressClick}
                 >
-                  <div className="absolute top-0 left-0 h-full bg-white/15 rounded-full" style={{ width: `${buffered}%` }} />
+                  <div
+                    className="absolute top-0 left-0 h-full bg-white/15 rounded-full"
+                    style={{ width: `${buffered}%` }}
+                  />
                   <div
                     className="absolute top-0 left-0 h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"
                     style={{ width: `${duration ? (progress / duration) * 100 : 0}%` }}
@@ -546,13 +705,28 @@ export default function VideoPlayer({ video }: Props) {
 
                 {/* Controls row */}
                 <div className="flex items-center gap-2 sm:gap-3">
-                  <button onClick={togglePlay} className="text-white hover:text-purple-300 transition-colors p-1">
-                    {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
+                  <button
+                    onClick={togglePlay}
+                    className="text-white hover:text-purple-300 transition-colors p-1"
+                  >
+                    {isPlaying ? (
+                      <Pause className="w-5 h-5" />
+                    ) : (
+                      <Play className="w-5 h-5 ml-0.5" />
+                    )}
                   </button>
-                  <button onClick={() => seekRelative(-10)} className="text-white/60 hover:text-white transition-colors p-1 hidden sm:block" title="Rewind 10s (J)">
+                  <button
+                    onClick={() => seekRelative(-10)}
+                    className="text-white/60 hover:text-white transition-colors p-1 hidden sm:block"
+                    title="Rewind 10s (J)"
+                  >
                     <SkipBack className="w-4 h-4" />
                   </button>
-                  <button onClick={() => seekRelative(10)} className="text-white/60 hover:text-white transition-colors p-1 hidden sm:block" title="Forward 10s (L)">
+                  <button
+                    onClick={() => seekRelative(10)}
+                    className="text-white/60 hover:text-white transition-colors p-1 hidden sm:block"
+                    title="Forward 10s (L)"
+                  >
                     <SkipForward className="w-4 h-4" />
                   </button>
                   <span className="text-[11px] sm:text-xs text-white/60 font-mono tabular-nums min-w-fit">
@@ -579,21 +753,32 @@ export default function VideoPlayer({ video }: Props) {
                     title="Captions (C)"
                   >
                     <Subtitles className="w-[18px] h-[18px]" />
-                    {captionsEnabled && <div className="w-4 h-[2px] bg-purple-400 mx-auto rounded-full mt-[-2px]" />}
+                    {captionsEnabled && (
+                      <div className="w-4 h-[2px] bg-purple-400 mx-auto rounded-full mt-[-2px]" />
+                    )}
                   </button>
 
                   {/* Volume */}
                   <div className="flex items-center gap-1 group/vol">
-                    <button onClick={handleToggleMute} className="text-white/60 hover:text-white transition-colors p-1" title="Mute (M)">
-                      {isMuted || playerVolume === 0
-                        ? <VolumeX className="w-[18px] h-[18px]" />
-                        : playerVolume < 50
-                          ? <Volume1 className="w-[18px] h-[18px]" />
-                          : <Volume2 className="w-[18px] h-[18px]" />}
+                    <button
+                      onClick={handleToggleMute}
+                      className="text-white/60 hover:text-white transition-colors p-1"
+                      title="Mute (M)"
+                    >
+                      {isMuted || playerVolume === 0 ? (
+                        <VolumeX className="w-[18px] h-[18px]" />
+                      ) : playerVolume < 50 ? (
+                        <Volume1 className="w-[18px] h-[18px]" />
+                      ) : (
+                        <Volume2 className="w-[18px] h-[18px]" />
+                      )}
                     </button>
                     <div className="w-0 group-hover/vol:w-20 overflow-hidden transition-all duration-200">
                       <input
-                        type="range" min="0" max="100" value={isMuted ? 0 : playerVolume}
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={isMuted ? 0 : playerVolume}
                         onChange={(e) => handleVolumeChange(parseInt(e.target.value))}
                         className="w-20 accent-purple-500 h-1 cursor-pointer"
                       />
@@ -603,11 +788,16 @@ export default function VideoPlayer({ video }: Props) {
                   {/* Settings gear */}
                   <div className="relative" ref={settingsRef}>
                     <button
-                      onClick={() => { setShowSettings(!showSettings); setSettingsPanel('main'); }}
+                      onClick={() => {
+                        setShowSettings(!showSettings);
+                        setSettingsPanel('main');
+                      }}
                       className={`transition-colors p-1 ${showSettings ? 'text-purple-400' : 'text-white/60 hover:text-white'}`}
                       title="Settings"
                     >
-                      <Settings className={`w-[18px] h-[18px] transition-transform duration-300 ${showSettings ? 'rotate-45' : ''}`} />
+                      <Settings
+                        className={`w-[18px] h-[18px] transition-transform duration-300 ${showSettings ? 'rotate-45' : ''}`}
+                      />
                     </button>
 
                     {/* Settings dropdown */}
@@ -628,33 +818,53 @@ export default function VideoPlayer({ video }: Props) {
                                 onClick={() => setSettingsPanel('quality')}
                                 className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-white/80 hover:bg-white/5 transition-colors"
                               >
-                                <span className="flex items-center gap-2.5"><Eye className="w-4 h-4 text-white/40" /> Quality</span>
-                                <span className="text-xs text-white/40">{qualityLabels[currentQuality] || currentQuality}</span>
+                                <span className="flex items-center gap-2.5">
+                                  <Eye className="w-4 h-4 text-white/40" /> Quality
+                                </span>
+                                <span className="text-xs text-white/40">
+                                  {qualityLabels[currentQuality] || currentQuality}
+                                </span>
                               </button>
                               {/* Speed */}
                               <button
                                 onClick={() => setSettingsPanel('speed')}
                                 className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-white/80 hover:bg-white/5 transition-colors"
                               >
-                                <span className="flex items-center gap-2.5"><Gauge className="w-4 h-4 text-white/40" /> Playback speed</span>
-                                <span className="text-xs text-white/40">{playbackSpeed === 1 ? 'Normal' : `${playbackSpeed}x`}</span>
+                                <span className="flex items-center gap-2.5">
+                                  <Gauge className="w-4 h-4 text-white/40" /> Playback speed
+                                </span>
+                                <span className="text-xs text-white/40">
+                                  {playbackSpeed === 1 ? 'Normal' : `${playbackSpeed}x`}
+                                </span>
                               </button>
                               {/* Captions */}
                               <button
-                                onClick={() => captionTracks.length > 0 ? setSettingsPanel('captions') : handleToggleCaptions()}
+                                onClick={() =>
+                                  captionTracks.length > 0
+                                    ? setSettingsPanel('captions')
+                                    : handleToggleCaptions()
+                                }
                                 className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-white/80 hover:bg-white/5 transition-colors"
                               >
-                                <span className="flex items-center gap-2.5"><Subtitles className="w-4 h-4 text-white/40" /> Subtitles/CC</span>
+                                <span className="flex items-center gap-2.5">
+                                  <Subtitles className="w-4 h-4 text-white/40" /> Subtitles/CC
+                                </span>
                                 <span className="text-xs text-white/40">
-                                  {captionsEnabled ? (currentCaptionLang || 'On') : 'Off'}
+                                  {captionsEnabled ? currentCaptionLang || 'On' : 'Off'}
                                 </span>
                               </button>
                               {/* PiP */}
                               <button
-                                onClick={() => { handlePiP(); setShowSettings(false); }}
+                                onClick={() => {
+                                  handlePiP();
+                                  setShowSettings(false);
+                                }}
                                 className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-white/80 hover:bg-white/5 transition-colors"
                               >
-                                <span className="flex items-center gap-2.5"><PictureInPicture2 className="w-4 h-4 text-white/40" /> Picture-in-picture</span>
+                                <span className="flex items-center gap-2.5">
+                                  <PictureInPicture2 className="w-4 h-4 text-white/40" />{' '}
+                                  Picture-in-picture
+                                </span>
                               </button>
                             </div>
                           )}
@@ -725,7 +935,9 @@ export default function VideoPlayer({ video }: Props) {
                               </button>
                               <div className="py-1 max-h-56 overflow-y-auto scrollbar-hide">
                                 <button
-                                  onClick={() => { handleToggleCaptions(); }}
+                                  onClick={() => {
+                                    handleToggleCaptions();
+                                  }}
                                   className={`w-full flex items-center justify-between px-4 py-2 text-sm hover:bg-white/5 transition-colors ${!captionsEnabled ? 'text-purple-400' : 'text-white/70'}`}
                                 >
                                   Off
@@ -738,7 +950,9 @@ export default function VideoPlayer({ video }: Props) {
                                     className={`w-full flex items-center justify-between px-4 py-2 text-sm hover:bg-white/5 transition-colors ${captionsEnabled && currentCaptionLang === t.lang ? 'text-purple-400' : 'text-white/70'}`}
                                   >
                                     {t.name}
-                                    {captionsEnabled && currentCaptionLang === t.lang && <Check className="w-4 h-4" />}
+                                    {captionsEnabled && currentCaptionLang === t.lang && (
+                                      <Check className="w-4 h-4" />
+                                    )}
                                   </button>
                                 ))}
                               </div>
@@ -750,17 +964,33 @@ export default function VideoPlayer({ video }: Props) {
                   </div>
 
                   {/* PiP (desktop) */}
-                  <button onClick={handlePiP} className="text-white/60 hover:text-white transition-colors p-1 hidden md:block" title="Picture-in-picture">
+                  <button
+                    onClick={handlePiP}
+                    className="text-white/60 hover:text-white transition-colors p-1 hidden md:block"
+                    title="Picture-in-picture"
+                  >
                     <PictureInPicture2 className="w-[16px] h-[16px]" />
                   </button>
 
                   {/* Theater toggle */}
-                  <button onClick={() => setIsTheaterMode(!isTheaterMode)} className="text-white/60 hover:text-white transition-colors p-1 hidden md:block" title="Theater mode">
-                    {isTheaterMode ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                  <button
+                    onClick={() => setIsTheaterMode(!isTheaterMode)}
+                    className="text-white/60 hover:text-white transition-colors p-1 hidden md:block"
+                    title="Theater mode"
+                  >
+                    {isTheaterMode ? (
+                      <Minimize2 className="w-4 h-4" />
+                    ) : (
+                      <Maximize2 className="w-4 h-4" />
+                    )}
                   </button>
 
                   {/* Fullscreen */}
-                  <button onClick={toggleFullscreenMode} className="text-white/60 hover:text-white transition-colors p-1" title="Fullscreen (F)">
+                  <button
+                    onClick={toggleFullscreenMode}
+                    className="text-white/60 hover:text-white transition-colors p-1"
+                    title="Fullscreen (F)"
+                  >
                     <Maximize2 className="w-[18px] h-[18px]" />
                   </button>
                 </div>
@@ -770,17 +1000,23 @@ export default function VideoPlayer({ video }: Props) {
             {/* Keyboard hints */}
             <AnimatePresence>
               {showControls && !isPlaying && playerReady && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute bottom-16 left-0 right-0 flex justify-center gap-3 z-10 pointer-events-none">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute bottom-16 left-0 right-0 flex justify-center gap-3 z-10 pointer-events-none"
+                >
                   {[
                     ['Space', 'Play'],
                     ['F', 'Fullscreen'],
                     ['M', 'Mute'],
                     ['C', 'Captions'],
                     ['J/L', '±10s'],
-                    ['</>','Speed'],
+                    ['</>', 'Speed'],
                   ].map(([key, label]) => (
                     <span key={key} className="text-white/15 text-[10px] flex items-center gap-1">
-                      <kbd className="px-1.5 py-0.5 bg-white/10 rounded text-[9px]">{key}</kbd>{label}
+                      <kbd className="px-1.5 py-0.5 bg-white/10 rounded text-[9px]">{key}</kbd>
+                      {label}
                     </span>
                   ))}
                 </motion.div>
@@ -796,8 +1032,16 @@ export default function VideoPlayer({ video }: Props) {
             {/* Stats row */}
             {ytInfo && (
               <div className="flex items-center gap-4 text-xs text-white/40">
-                <span className="flex items-center gap-1"><Eye className="w-3.5 h-3.5" /> {ytInfo.viewCount} views</span>
-                <span>{new Date(ytInfo.publishedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                <span className="flex items-center gap-1">
+                  <Eye className="w-3.5 h-3.5" /> {ytInfo.viewCount} views
+                </span>
+                <span>
+                  {new Date(ytInfo.publishedAt).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                  })}
+                </span>
               </div>
             )}
 
@@ -808,7 +1052,11 @@ export default function VideoPlayer({ video }: Props) {
                 <div className="flex items-center gap-3 mr-auto">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center flex-shrink-0 overflow-hidden">
                     {channel?.thumbnailUrl ? (
-                      <img src={channel.thumbnailUrl} alt={channelName} className="w-full h-full rounded-full object-cover" />
+                      <img
+                        src={channel.thumbnailUrl}
+                        alt={channelName}
+                        className="w-full h-full rounded-full object-cover"
+                      />
                     ) : (
                       <span className="text-white font-bold text-sm">{channelName.charAt(0)}</span>
                     )}
@@ -822,7 +1070,8 @@ export default function VideoPlayer({ video }: Props) {
                   {channel && (
                     <a
                       href={`https://www.youtube.com/channel/${channel.youtubeChannelId}?sub_confirmation=1`}
-                      target="_blank" rel="noopener noreferrer"
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="ml-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-full transition-colors flex items-center gap-1.5"
                     >
                       <Bell className="w-3.5 h-3.5" /> Subscribe
@@ -835,7 +1084,8 @@ export default function VideoPlayer({ video }: Props) {
               <div className="flex items-center gap-2">
                 {/* Like */}
                 <motion.button
-                  whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={toggleLike}
                   className={`px-3 py-2 rounded-xl text-sm flex items-center gap-1.5 transition-all border ${
                     liked
@@ -849,7 +1099,8 @@ export default function VideoPlayer({ video }: Props) {
 
                 {/* Share */}
                 <motion.button
-                  whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={handleShare}
                   className="px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white/70 hover:text-white text-sm flex items-center gap-1.5 transition-all"
                 >
@@ -862,9 +1113,13 @@ export default function VideoPlayer({ video }: Props) {
             {/* Batch & Subject info */}
             {batch && (
               <div className="flex items-center gap-2 text-sm">
-                <span className="px-3 py-1 bg-purple-500/10 text-purple-300 rounded-lg border border-purple-500/10 text-xs font-medium">{batch.name}</span>
+                <span className="px-3 py-1 bg-purple-500/10 text-purple-300 rounded-lg border border-purple-500/10 text-xs font-medium">
+                  {batch.name}
+                </span>
                 {video.subject && (
-                  <span className="px-3 py-1 bg-pink-500/10 text-pink-300 rounded-lg border border-pink-500/10 text-xs font-medium">{video.subject}</span>
+                  <span className="px-3 py-1 bg-pink-500/10 text-pink-300 rounded-lg border border-pink-500/10 text-xs font-medium">
+                    {video.subject}
+                  </span>
                 )}
               </div>
             )}
@@ -873,7 +1128,12 @@ export default function VideoPlayer({ video }: Props) {
             {ytInfo && ytInfo.tags.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
                 {ytInfo.tags.slice(0, 10).map((tag, i) => (
-                  <span key={i} className="px-2 py-0.5 bg-white/5 border border-white/5 rounded-md text-[10px] text-white/30">#{tag}</span>
+                  <span
+                    key={i}
+                    className="px-2 py-0.5 bg-white/5 border border-white/5 rounded-md text-[10px] text-white/30"
+                  >
+                    #{tag}
+                  </span>
                 ))}
               </div>
             )}
@@ -887,7 +1147,11 @@ export default function VideoPlayer({ video }: Props) {
                 <BookOpen className="w-4 h-4" />
                 <span className="font-medium">Description</span>
                 {ytInfoLoading && <Loader2 className="w-3 h-3 animate-spin text-white/30" />}
-                {showDescription ? <ChevronUp className="w-4 h-4 ml-auto" /> : <ChevronDown className="w-4 h-4 ml-auto" />}
+                {showDescription ? (
+                  <ChevronUp className="w-4 h-4 ml-auto" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 ml-auto" />
+                )}
               </button>
               <AnimatePresence>
                 {showDescription && (
@@ -949,34 +1213,55 @@ export default function VideoPlayer({ video }: Props) {
                           <div className="text-center py-12">
                             <StickyNote className="w-12 h-12 text-white/10 mx-auto mb-3" />
                             <p className="text-white/30 text-sm">No notes yet</p>
-                            <p className="text-white/20 text-xs mt-1">Start taking notes while watching</p>
+                            <p className="text-white/20 text-xs mt-1">
+                              Start taking notes while watching
+                            </p>
                           </div>
                         ) : (
-                          notes.sort((a, b) => a.timestamp - b.timestamp).map((note) => (
-                            <motion.div key={note.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                              className="bg-[#1a1035]/60 border border-purple-500/10 rounded-xl p-3 group">
-                              <div className="flex items-start justify-between gap-2">
-                                <span className="text-xs text-purple-400 font-mono bg-purple-500/10 px-2 py-0.5 rounded-md">
-                                  <Clock className="w-3 h-3 inline mr-1" />{formatTimestamp(note.timestamp)}
-                                </span>
-                                <button onClick={() => deleteNote(note.id)}
-                                  className="text-white/20 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all">
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                              <p className="text-sm text-white/70 leading-relaxed mt-2">{note.content}</p>
-                            </motion.div>
-                          ))
+                          notes
+                            .sort((a, b) => a.timestamp - b.timestamp)
+                            .map((note) => (
+                              <motion.div
+                                key={note.id}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="bg-[#1a1035]/60 border border-purple-500/10 rounded-xl p-3 group"
+                              >
+                                <div className="flex items-start justify-between gap-2">
+                                  <span className="text-xs text-purple-400 font-mono bg-purple-500/10 px-2 py-0.5 rounded-md">
+                                    <Clock className="w-3 h-3 inline mr-1" />
+                                    {formatTimestamp(note.timestamp)}
+                                  </span>
+                                  <button
+                                    onClick={() => deleteNote(note.id)}
+                                    className="text-white/20 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                                <p className="text-sm text-white/70 leading-relaxed mt-2">
+                                  {note.content}
+                                </p>
+                              </motion.div>
+                            ))
                         )}
                       </div>
                       <div className="p-4 border-t border-purple-500/10">
                         <div className="flex gap-2">
-                          <input type="text" value={noteText} onChange={(e) => setNoteText(e.target.value)}
+                          <input
+                            type="text"
+                            value={noteText}
+                            onChange={(e) => setNoteText(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleAddNote()}
                             placeholder="Add a note..."
-                            className="flex-1 bg-[#1a1035] border border-purple-500/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/20 focus:outline-none focus:border-purple-500/30 transition-colors" />
-                          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleAddNote}
-                            className="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-white text-sm font-medium">
+                            className="flex-1 bg-[#1a1035] border border-purple-500/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/20 focus:outline-none focus:border-purple-500/30 transition-colors"
+                          />
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={handleAddNote}
+                            className="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-white text-sm font-medium"
+                          >
                             <Plus className="w-4 h-4" />
                           </motion.button>
                         </div>
@@ -987,7 +1272,12 @@ export default function VideoPlayer({ video }: Props) {
                       <div className="text-center">
                         <StickyNote className="w-12 h-12 text-white/10 mx-auto mb-3" />
                         <p className="text-white/40 text-sm">Sign in to take notes</p>
-                        <a href="/login" className="text-purple-400 text-sm font-medium hover:text-purple-300 mt-2 inline-block">Sign In →</a>
+                        <a
+                          href="/login"
+                          className="text-purple-400 text-sm font-medium hover:text-purple-300 mt-2 inline-block"
+                        >
+                          Sign In →
+                        </a>
                       </div>
                     </div>
                   )}
@@ -1001,32 +1291,49 @@ export default function VideoPlayer({ video }: Props) {
                     <div className="flex items-center justify-center h-full">
                       <div className="text-center p-6">
                         <MessageSquare className="w-12 h-12 text-white/10 mx-auto mb-3" />
-                        <p className="text-white/40 text-sm">Comments are disabled for this video</p>
+                        <p className="text-white/40 text-sm">
+                          Comments are disabled for this video
+                        </p>
                       </div>
                     </div>
                   ) : (
                     <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide">
                       {comments.map((c) => (
-                        <motion.div key={c.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                          className="space-y-2">
+                        <motion.div
+                          key={c.id}
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="space-y-2"
+                        >
                           {/* Top level comment */}
                           <div className="flex gap-3">
-                            <img src={c.authorImage} alt="" className="w-8 h-8 rounded-full flex-shrink-0 bg-white/10" />
+                            <img
+                              src={c.authorImage}
+                              alt=""
+                              className="w-8 h-8 rounded-full flex-shrink-0 bg-white/10"
+                            />
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
-                                <span className="text-xs font-semibold text-white/80">{c.authorName}</span>
+                                <span className="text-xs font-semibold text-white/80">
+                                  {c.authorName}
+                                </span>
                                 <span className="text-[10px] text-white/25">{c.timeAgo}</span>
                               </div>
-                              <p className="text-sm text-white/60 mt-1 leading-relaxed whitespace-pre-wrap break-words">{c.text}</p>
+                              <p className="text-sm text-white/60 mt-1 leading-relaxed whitespace-pre-wrap break-words">
+                                {c.text}
+                              </p>
                               <div className="flex items-center gap-3 mt-2">
                                 <button className="flex items-center gap-1 text-[10px] text-white/30 hover:text-white/50 transition-colors">
                                   <ThumbsUp className="w-3 h-3" /> {c.likeCount}
                                 </button>
 
                                 {c.replyCount > 0 && (
-                                  <button onClick={() => toggleReplies(c.id)}
-                                    className="text-[10px] text-purple-400 hover:text-purple-300 font-medium transition-colors">
-                                    {expandedReplies.has(c.id) ? 'Hide' : `${c.replyCount}`} {c.replyCount === 1 ? 'reply' : 'replies'}
+                                  <button
+                                    onClick={() => toggleReplies(c.id)}
+                                    className="text-[10px] text-purple-400 hover:text-purple-300 font-medium transition-colors"
+                                  >
+                                    {expandedReplies.has(c.id) ? 'Hide' : `${c.replyCount}`}{' '}
+                                    {c.replyCount === 1 ? 'reply' : 'replies'}
                                   </button>
                                 )}
                               </div>
@@ -1036,18 +1343,32 @@ export default function VideoPlayer({ video }: Props) {
                           {/* Replies */}
                           <AnimatePresence>
                             {expandedReplies.has(c.id) && c.replies.length > 0 && (
-                              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                              <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                className="overflow-hidden"
+                              >
                                 <div className="pl-11 space-y-3 pt-1">
                                   {c.replies.map((r) => (
                                     <div key={r.id} className="flex gap-2.5">
-                                      <img src={r.authorImage} alt="" className="w-6 h-6 rounded-full flex-shrink-0 bg-white/10" />
+                                      <img
+                                        src={r.authorImage}
+                                        alt=""
+                                        className="w-6 h-6 rounded-full flex-shrink-0 bg-white/10"
+                                      />
                                       <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2">
-                                          <span className="text-[10px] font-semibold text-white/70">{r.authorName}</span>
-                                          <span className="text-[9px] text-white/20">{r.timeAgo}</span>
+                                          <span className="text-[10px] font-semibold text-white/70">
+                                            {r.authorName}
+                                          </span>
+                                          <span className="text-[9px] text-white/20">
+                                            {r.timeAgo}
+                                          </span>
                                         </div>
-                                        <p className="text-xs text-white/50 mt-0.5 leading-relaxed whitespace-pre-wrap break-words">{r.text}</p>
+                                        <p className="text-xs text-white/50 mt-0.5 leading-relaxed whitespace-pre-wrap break-words">
+                                          {r.text}
+                                        </p>
                                         <button className="flex items-center gap-1 mt-1 text-[9px] text-white/25 hover:text-white/40 transition-colors">
                                           <ThumbsUp className="w-2.5 h-2.5" /> {r.likeCount}
                                         </button>
@@ -1067,8 +1388,10 @@ export default function VideoPlayer({ video }: Props) {
                           <Loader2 className="w-5 h-5 text-purple-400 animate-spin" />
                         </div>
                       ) : nextPageToken ? (
-                        <button onClick={() => fetchComments(nextPageToken)}
-                          className="w-full py-3 text-xs text-purple-400 hover:text-purple-300 font-medium transition-colors">
+                        <button
+                          onClick={() => fetchComments(nextPageToken)}
+                          className="w-full py-3 text-xs text-purple-400 hover:text-purple-300 font-medium transition-colors"
+                        >
                           Load more comments
                         </button>
                       ) : comments.length === 0 ? (
