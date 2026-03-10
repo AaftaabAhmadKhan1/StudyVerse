@@ -115,7 +115,7 @@ export default function VideoPlayer({ video }: Props) {
   const description = ytInfo?.description || video.description || '';
   const channelName = channel?.name || ytInfo?.channelTitle || '';
 
-  const liveChatUrl = `https://www.youtube.com/live_chat?v=${ytId}&embed_domain=${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}`;
+  const liveChatUrl = `https://www.youtube.com/live_chat?v=${ytId}&embed_domain=${typeof window !== 'undefined' ? window.location.hostname : ''}`;
 
   // ---------- Fetch video info ----------
   const fetchVideoInfo = useCallback(async () => {
@@ -282,7 +282,7 @@ export default function VideoPlayer({ video }: Props) {
       ytPlayerRef.current = null;
       setPlayerReady(false);
     };
-  }, [ytId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [ytId]);  
 
   // ===== Player control helpers =====
   const togglePlay = useCallback(() => {
