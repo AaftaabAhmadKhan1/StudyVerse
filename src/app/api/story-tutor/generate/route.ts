@@ -23,6 +23,7 @@ export async function POST(req: Request) {
       // Fallback data if no API key is provided
       const fallbackData = {
         title: `The Magical Adventure of ${topic}`,
+        videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
         conceptSummary: `Here is a fun summary of ${topic} through the lens of a ${theme} adventure!`,
         story: [
           `Once upon a time in a world full of ${theme}, there was an amazing discovery about ${topic}.`,
