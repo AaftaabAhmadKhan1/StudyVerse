@@ -105,6 +105,9 @@ export async function POST(req: Request) {
     }
 
     const parsedContent = JSON.parse(content);
+    
+    // Add the demo animation video to the real AI response as well
+    parsedContent.videoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
 
     return NextResponse.json({ data: parsedContent, success: true });
   } catch (error: any) {
