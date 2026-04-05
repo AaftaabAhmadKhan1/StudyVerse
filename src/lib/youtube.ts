@@ -2,7 +2,7 @@
 // YouTube Data API v3 - Helper Functions
 // ============================================================
 
-const YT_API_BASE = 'https://www.googleapis.com/youtube/v3';
+export const YT_API_BASE = 'https://www.googleapis.com/youtube/v3';
 
 export interface FetchedChannelData {
   youtubeChannelId: string;
@@ -63,9 +63,58 @@ export async function fetchChannelByHandle(
     name: snippet.title,
     description: snippet.description || '',
     thumbnailUrl: snippet.thumbnails?.high?.url || snippet.thumbnails?.medium?.url || snippet.thumbnails?.default?.url || '',
-    bannerUrl: branding?.image?.bannerExternalUrl || '',
+    // Try multiple possible banner fields to maximize chance of getting an image
+    bannerUrl:
+      branding?.image?.bannerExternalUrl ||
+      branding?.image?.bannerImageUrl ||
+      branding?.image?.mobileBannerExternalUrl ||
+      branding?.image?.large ||
+      '',
     subscriberCount: formatCount(stats.subscriberCount || '0'),
     videoCount: formatCount(stats.videoCount || '0'),
     handle: snippet.customUrl || `@${cleanHandle}`,
+  };
+}
+
+/**
+ * Fetch channel data from YouTube Data API v3 using a channel ID.
+ */
+export async function fetchChannelById(
+  id: string,
+  apiKey: string
+): Promise<FetchedChannelData> {
+  const channelRes = await fetch(
+    `${YT_API_BASE}/channels?id=${encodeURIComponent(id)}&part=snippet,statistics,brandingSettings&key=${apiKey}`
+  );
+
+  if (!channelRes.ok) {
+    const err = await channelRes.json().catch(() => ({}));
+    throw new Error(err?.error?.message || `YouTube API error: ${channelRes.status}`);
+  }
+
+  const channelData = await channelRes.json();
+  if (!channelData.items || channelData.items.length === 0) {
+    throw new Error(`No channel found for id "${id}"`);
+  }
+
+  const channel = channelData.items[0];
+  const snippet = channel.snippet;
+  const stats = channel.statistics;
+  const branding = channel.brandingSettings;
+
+  return {
+    youtubeChannelId: channel.id,
+    name: snippet.title,
+    description: snippet.description || '',
+    thumbnailUrl: snippet.thumbnails?.high?.url || snippet.thumbnails?.medium?.url || snippet.thumbnails?.default?.url || '',
+    bannerUrl:
+      branding?.image?.bannerExternalUrl ||
+      branding?.image?.bannerImageUrl ||
+      branding?.image?.mobileBannerExternalUrl ||
+      branding?.image?.large ||
+      '',
+    subscriberCount: formatCount(stats.subscriberCount || '0'),
+    videoCount: formatCount(stats.videoCount || '0'),
+    handle: snippet.customUrl || `@${id}`,
   };
 }

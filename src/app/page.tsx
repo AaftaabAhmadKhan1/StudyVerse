@@ -1,13 +1,12 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import {
   Play,
   Tv,
   Flame,
   Radio,
-  BookOpen,
   ArrowRight,
   Sparkles,
   Zap,
@@ -18,9 +17,7 @@ import Link from 'next/link';
 import Navigation from '@/components/Navigation';
 import FooterNew from '@/components/FooterNew';
 import ChannelCard from '@/components/ChannelCard';
-import AnnouncementBanner from '@/components/AnnouncementBanner';
 import { useYTWallah } from '@/contexts/YTWallahContext';
-import { useAuth } from '@/contexts/AuthContext';
 
 // YT video type matching API response
 interface FetchedVideo {
@@ -42,22 +39,17 @@ interface FetchedVideo {
 }
 
 export default function Home() {
-  const { channels, announcements, siteSettings, batches, mounted } = useYTWallah();
-  const { isAuthenticated } = useAuth();
+  const { myChannels, siteSettings, mounted } = useYTWallah();
   const { scrollY } = useScroll();
   const y1 = useTransform(scrollY, [0, 1200], [0, 400]);
   const y2 = useTransform(scrollY, [0, 1200], [0, -300]);
 
-  const globalAnnouncements = announcements.filter((a) => a.type === 'global' && a.isActive);
-  const activeChannels = channels.filter((c) => c.isActive);
-
-  // User's subscribed channels
-  interface UserChannelInfo {
-    youtubeChannelId: string;
-    channelName: string;
-  }
-  const [userChannels, setUserChannels] = useState<UserChannelInfo[]>([]);
-  const [userChannelsLoaded, setUserChannelsLoaded] = useState(false);
+  const activeChannels = useMemo(() => myChannels.filter((c) => c.isActive), [myChannels]);
+  const activeChannelSignature = useMemo(
+    () => activeChannels.map((channel) => `${channel.id}:${channel.youtubeChannelId}`).join('|'),
+    [activeChannels]
+  );
+  const hasPersonalChannels = activeChannels.length > 0;
 
   // Fetched YouTube content from ALL channels
   const [allVideos, setAllVideos] = useState<FetchedVideo[]>([]);
@@ -70,38 +62,21 @@ export default function Home() {
   // Removed unused currentShortIdx and setCurrentShortIdx
   const shortsContainerRef = useRef<HTMLDivElement>(null);
 
-  // Fetch user's subscribed channels when authenticated
-  useEffect(() => {
-    if (!mounted || !isAuthenticated) {
-      setUserChannelsLoaded(true);
-      return;
-    }
-    (async () => {
-      try {
-        const res = await fetch('/api/user/channels');
-        const data = await res.json();
-        if (res.ok) setUserChannels(data.channels || []);
-      } catch {
-        /* ignore */
-      }
-      setUserChannelsLoaded(true);
-    })();
-  }, [mounted, isAuthenticated]);
-
-  // Determine which channels to fetch content from
-  // If user is logged in and has subscribed channels, use those; otherwise use all active (admin) channels
-  const hasPersonalChannels = isAuthenticated && userChannels.length > 0;
-
   // Fetch content from channels
   const fetchAllChannelContent = useCallback(async () => {
-    if (!siteSettings.youtubeApiKey || contentLoaded || !userChannelsLoaded) return;
+    if (!siteSettings.youtubeApiKey || contentLoaded) return;
 
-    // Build the list of channels to fetch
-    const channelsToFetch = hasPersonalChannels
-      ? userChannels.map((uc) => ({ youtubeChannelId: uc.youtubeChannelId, name: uc.channelName }))
-      : activeChannels.map((ch) => ({ youtubeChannelId: ch.youtubeChannelId, name: ch.name }));
+    const channelsToFetch = activeChannels.map((ch) => ({
+      youtubeChannelId: ch.youtubeChannelId,
+      name: ch.name,
+    }));
 
-    if (channelsToFetch.length === 0) return;
+    if (channelsToFetch.length === 0) {
+      setAllVideos([]);
+      setAllShorts([]);
+      setAllLive([]);
+      return;
+    }
     setContentLoading(true);
 
     const vids: FetchedVideo[] = [];
@@ -149,20 +124,25 @@ export default function Home() {
     setAllLive(lives);
     setContentLoaded(true);
     setContentLoading(false);
-  }, [
-    activeChannels,
-    userChannels,
-    hasPersonalChannels,
-    siteSettings.youtubeApiKey,
-    contentLoaded,
-    userChannelsLoaded,
-  ]);
+  }, [activeChannels, siteSettings.youtubeApiKey, contentLoaded]);
 
   useEffect(() => {
-    if (mounted && !contentLoaded && userChannelsLoaded) fetchAllChannelContent();
-  }, [mounted, contentLoaded, userChannelsLoaded, fetchAllChannelContent]);
+    if (activeChannels.length === 0) {
+      setAllVideos([]);
+      setAllShorts([]);
+      setAllLive([]);
+      setContentLoading(false);
+      setContentLoaded(false);
+      return;
+    }
+    setContentLoaded(false);
+  }, [activeChannelSignature, activeChannels.length]);
 
-  // Pick latest videos (mix from all channels, up to 12)
+  useEffect(() => {
+    if (mounted && !contentLoaded) fetchAllChannelContent();
+  }, [mounted, contentLoaded, fetchAllChannelContent]);
+
+  // Pick latest videos (mixed from added channels, up to 12)
   const latestVideos = allVideos.slice(0, 12);
   const currentLive = allLive.filter((v) => v.isLive);
   const shortsForReel = allShorts.slice(0, 20);
@@ -238,11 +218,11 @@ export default function Home() {
               className="text-5xl md:text-7xl lg:text-8xl font-extrabold mb-6 leading-[0.9]"
             >
               <span className="bg-gradient-to-r from-white via-purple-200 to-white bg-clip-text text-transparent">
-                YT
+                PW
               </span>
               <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
                 {' '}
-                Wallah
+                StudyVerse
               </span>
             </motion.h1>
 
@@ -284,49 +264,20 @@ export default function Home() {
               </Link>
             </motion.div>
 
-            {/* Stats */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.5 }}
-              className="mt-16 grid grid-cols-3 gap-6 max-w-lg mx-auto"
-            >
-              {[
-                { label: 'Channels', value: activeChannels.length, icon: Tv },
-                {
-                  label: 'Batches',
-                  value: batches.filter((b) => b.isActive).length,
-                  icon: BookOpen,
-                },
-                { label: 'Videos', value: allVideos.length, icon: Play },
-              ].map((stat) => (
-                <div key={stat.label} className="text-center">
-                  <stat.icon className="w-5 h-5 text-purple-400 mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-white">{stat.value}</p>
-                  <p className="text-xs text-white/30">{stat.label}</p>
-                </div>
-              ))}
-            </motion.div>
           </div>
         </section>
 
-        {/* Announcements */}
-        {globalAnnouncements.length > 0 && (
-          <section className="px-6 py-6 max-w-7xl mx-auto">
-            <AnnouncementBanner announcements={globalAnnouncements} />
-          </section>
-        )}
 
         {/* Personalization Banner */}
-        {isAuthenticated && userChannelsLoaded && (
+        {false && (
           <section className="px-6 py-4 max-w-7xl mx-auto">
             {hasPersonalChannels ? (
               <div className="flex items-center justify-between px-4 py-3 bg-purple-500/10 border border-purple-500/20 rounded-xl">
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-purple-400" />
                   <span className="text-sm text-purple-300">
-                    Showing content from your <strong>{userChannels.length}</strong> subscribed
-                    channel{userChannels.length !== 1 ? 's' : ''}
+                    Showing content from your <strong>{activeChannels.length}</strong> added
+                    channel{activeChannels.length !== 1 ? 's' : ''}
                   </span>
                 </div>
                 <Link
@@ -358,11 +309,11 @@ export default function Home() {
           <section className="px-6 py-12 max-w-7xl mx-auto">
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="text-2xl font-bold text-white">PW Channels</h2>
-                <p className="text-sm text-white/40 mt-1">All Physics Wallah YouTube channels</p>
+                <h2 className="text-2xl font-bold text-white">My Channels</h2>
+                <p className="text-sm text-white/40 mt-1">Channels you have added</p>
               </div>
               <Link
-                href="/channels"
+                href="/my-channels"
                 className="text-sm text-purple-400 hover:text-purple-300 font-medium flex items-center gap-1"
               >
                 View All <ArrowRight className="w-4 h-4" />
@@ -390,7 +341,7 @@ export default function Home() {
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-white">Live Now</h2>
-                  <p className="text-sm text-white/40 mt-1">Currently streaming on PW channels</p>
+                  <p className="text-sm text-white/40 mt-1">Currently streaming on your added channels</p>
                 </div>
               </div>
               <Link
@@ -441,7 +392,7 @@ export default function Home() {
           </section>
         )}
 
-        {/* Latest Videos — fetched from all channels */}
+        {/* Latest Videos */}
         {contentLoading && allVideos.length === 0 ? (
           <section className="px-6 py-12 max-w-7xl mx-auto">
             <div className="flex items-center gap-3 mb-8">
@@ -460,11 +411,7 @@ export default function Home() {
                 <Zap className="w-6 h-6 text-yellow-400" />
                 <div>
                   <h2 className="text-2xl font-bold text-white">Latest Videos</h2>
-                  <p className="text-sm text-white/40 mt-1">
-                    {hasPersonalChannels
-                      ? 'From your subscribed channels'
-                      : 'Recent uploads from all channels'}
-                  </p>
+                    <p className="text-sm text-white/40 mt-1">From your added channels</p>
                 </div>
               </div>
             </div>
@@ -526,7 +473,7 @@ export default function Home() {
                 <Flame className="w-6 h-6 text-orange-400" />
                 <div>
                   <h2 className="text-2xl font-bold text-white">Shorts</h2>
-                  <p className="text-sm text-white/40 mt-1">Quick bites from PW channels</p>
+                  <p className="text-sm text-white/40 mt-1">Quick bites from your added channels</p>
                 </div>
               </div>
               <Link
@@ -608,10 +555,10 @@ export default function Home() {
             <Tv className="w-16 h-16 text-white/10 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-white mb-2">No Content Yet</h2>
             <p className="text-white/40 mb-6">
-              Channels and videos will appear here once added by the admin.
+              Add channels to My Channels to see your channel list and latest videos here.
             </p>
-            <Link href="/admin/login" className="text-purple-400 hover:text-purple-300 font-medium">
-              Go to Admin Panel →
+            <Link href="/channels" className="text-purple-400 hover:text-purple-300 font-medium">
+              Find Channels →
             </Link>
           </section>
         )}

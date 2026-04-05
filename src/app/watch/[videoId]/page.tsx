@@ -1,16 +1,15 @@
 'use client';
 
-import { use } from 'react';
-import Navigation from '@/components/Navigation';
+import { use, useEffect } from 'react';
 import VideoPlayer from '@/components/VideoPlayer';
 import { useYTWallah } from '@/contexts/YTWallahContext';
-import { Play } from 'lucide-react';
-import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
 import { Video } from '@/data/types';
 
 export default function WatchPage({ params }: { params: Promise<{ videoId: string }> }) {
   const { videoId } = use(params);
   const { videos } = useYTWallah();
+  const { addWatchHistory } = useAuth();
 
   // Try to find video in local store — first by id, then by youtubeVideoId
   let video = videos.find((v) => v.id === videoId);
@@ -34,10 +33,19 @@ export default function WatchPage({ params }: { params: Promise<{ videoId: strin
     createdAt: '',
   };
 
+  useEffect(() => {
+    addWatchHistory({
+      id: videoData.id,
+      youtubeVideoId: videoData.youtubeVideoId,
+      title: videoData.title || 'Untitled Video',
+      thumbnailUrl: videoData.thumbnailUrl,
+      channelName: '',
+    });
+  }, [addWatchHistory, videoData.id, videoData.youtubeVideoId, videoData.title, videoData.thumbnailUrl]);
+
   return (
     <main className="min-h-screen bg-[#030014]">
-      <Navigation />
-      <div className="md:ml-52 lg:ml-60 pt-16 md:pt-0">
+      <div>
         <div className="px-4 md:px-6 py-6 max-w-[1800px] mx-auto">
           <VideoPlayer video={videoData} />
         </div>

@@ -24,7 +24,6 @@ export default function AdminAnnouncementsPage() {
     isAdminAuthenticated,
     mounted,
     announcements,
-    batches,
     addAnnouncement,
     updateAnnouncement,
     deleteAnnouncement,
@@ -34,8 +33,6 @@ export default function AdminAnnouncementsPage() {
   const [form, setForm] = useState({
     title: '',
     content: '',
-    type: 'global' as 'global' | 'batch',
-    batchId: '',
     priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
     isActive: true,
     expiresAt: '',
@@ -57,8 +54,6 @@ export default function AdminAnnouncementsPage() {
     setForm({
       title: '',
       content: '',
-      type: 'global',
-      batchId: '',
       priority: 'medium',
       isActive: true,
       expiresAt: '',
@@ -71,7 +66,7 @@ export default function AdminAnnouncementsPage() {
     e.preventDefault();
     const payload = {
       ...form,
-      batchId: form.type === 'batch' ? form.batchId : '',
+      type: 'global' as const,
       expiresAt: form.expiresAt || undefined,
     };
     if (editingId) {
@@ -86,8 +81,6 @@ export default function AdminAnnouncementsPage() {
     setForm({
       title: ann.title,
       content: ann.content,
-      type: ann.type,
-      batchId: ann.batchId || '',
       priority: ann.priority,
       isActive: ann.isActive,
       expiresAt: ann.expiresAt ? new Date(ann.expiresAt).toISOString().slice(0, 16) : '',
@@ -121,7 +114,7 @@ export default function AdminAnnouncementsPage() {
                 <Megaphone className="w-7 h-7 text-yellow-400" /> Announcements
               </h1>
               <p className="text-white/40 text-sm mt-1">
-                Manage global and batch-wise announcements
+                Manage global announcements for the announcements page
               </p>
             </motion.div>
             <motion.button
@@ -188,43 +181,6 @@ export default function AdminAnnouncementsPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-medium text-white/50 block mb-1">Type *</label>
-                      <select
-                        value={form.type}
-                        onChange={(e) =>
-                          setForm({
-                            ...form,
-                            type: e.target.value as 'global' | 'batch',
-                            batchId: '',
-                          })
-                        }
-                        className="w-full px-4 py-2.5 bg-[#1a1035] border border-purple-500/10 rounded-xl text-white text-sm focus:outline-none focus:border-purple-500/30"
-                      >
-                        <option value="global">Global</option>
-                        <option value="batch">Batch-specific</option>
-                      </select>
-                    </div>
-                    {form.type === 'batch' && (
-                      <div>
-                        <label className="text-xs font-medium text-white/50 block mb-1">
-                          Batch *
-                        </label>
-                        <select
-                          required
-                          value={form.batchId}
-                          onChange={(e) => setForm({ ...form, batchId: e.target.value })}
-                          className="w-full px-4 py-2.5 bg-[#1a1035] border border-purple-500/10 rounded-xl text-white text-sm focus:outline-none focus:border-purple-500/30"
-                        >
-                          <option value="">Select batch</option>
-                          {batches.map((b) => (
-                            <option key={b.id} value={b.id}>
-                              {b.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-                    <div>
                       <label className="text-xs font-medium text-white/50 block mb-1">
                         Priority
                       </label>
@@ -286,7 +242,6 @@ export default function AdminAnnouncementsPage() {
 
           <div className="space-y-3">
             {announcements.map((ann, i) => {
-              const batch = batches.find((b) => b.id === ann.batchId);
               return (
                 <motion.div
                   key={ann.id}
@@ -310,7 +265,7 @@ export default function AdminAnnouncementsPage() {
                           {ann.priority}
                         </span>
                         <span className="px-2 py-0.5 bg-white/5 text-white/30 rounded-md text-[10px]">
-                          {ann.type === 'global' ? 'Global' : batch?.name || 'Batch'}
+                          Global
                         </span>
                         {!ann.isActive && (
                           <span className="px-2 py-0.5 bg-white/5 text-white/20 rounded-md text-[10px]">

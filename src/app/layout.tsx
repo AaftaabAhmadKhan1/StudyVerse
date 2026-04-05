@@ -4,20 +4,21 @@ import "./globals.css";
 import { YTWallahProvider } from "@/contexts/YTWallahContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 
-const inter = Inter({ 
+const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
 });
 
-const spaceGrotesk = Space_Grotesk({ 
+const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
   variable: "--font-space",
 });
 
 export const metadata: Metadata = {
-  title: "YT Wallah — Distraction-Free Physics Wallah Content",
-  description: "Access all Physics Wallah YouTube content in one place. No distractions, just pure learning. Watch lectures, live classes, and shorts from all PW channels.",
-  keywords: ["physics wallah", "PW", "JEE", "NEET", "youtube", "lectures", "free education", "YT Wallah"],
+  title: "PW StudyVerse — Focused Learning Companion for PW Content",
+  description:
+    "PW StudyVerse helps students discover and watch PW YouTube lectures in a cleaner study workflow using official YouTube embeds and API-powered organization.",
+  keywords: ["physics wallah", "PW", "JEE", "NEET", "youtube", "lectures", "free education", "PW StudyVerse"],
 };
 
 export default function RootLayout({
@@ -29,9 +30,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.variable} ${spaceGrotesk.variable} antialiased`}>
         <YTWallahProvider>
-          <AuthProvider>
-            {children}
-          </AuthProvider>
+          <AuthProvider>{children}</AuthProvider>
         </YTWallahProvider>
       </body>
     </html>

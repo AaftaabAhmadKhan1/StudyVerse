@@ -74,7 +74,7 @@ export default function AdminDashboard() {
             className="mb-8"
           >
             <h1 className="text-3xl font-bold text-white mb-1">Dashboard</h1>
-            <p className="text-white/40 text-sm">Welcome to YT Wallah Admin Panel</p>
+            <p className="text-white/40 text-sm">Welcome to PW StudyVerse Admin Panel</p>
           </motion.div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">

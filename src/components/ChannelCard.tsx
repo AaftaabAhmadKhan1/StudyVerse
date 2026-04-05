@@ -2,16 +2,23 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
 import { useYTWallah } from '@/contexts/YTWallahContext';
-import { Tv, Users, Video } from 'lucide-react';
+import { Tv, Video } from 'lucide-react';
+import type { ReactNode } from 'react';
 
-export default function ChannelCard({ channelId }: { channelId: string }) {
-  const { channels, batches } = useYTWallah();
+export default function ChannelCard({
+  channelId,
+  action,
+}: {
+  channelId: string;
+  action?: ReactNode;
+}) {
+  const { channels } = useYTWallah();
+  const { getDisplaySubscriberCount } = useAuth();
   const channel = channels.find((c) => c.id === channelId);
 
   if (!channel) return null;
-
-  const channelBatches = batches.filter((b) => b.channelId === channelId && b.isActive);
 
   return (
     <Link href={`/channel/${channel.id}`}>
@@ -21,8 +28,15 @@ export default function ChannelCard({ channelId }: { channelId: string }) {
         className="group relative bg-[#0f0a1f]/80 border border-purple-500/10 rounded-2xl overflow-hidden hover:border-purple-500/30 transition-all duration-300"
       >
         {/* Banner */}
-        <div className="h-28 bg-gradient-to-r from-purple-600/30 via-pink-600/20 to-purple-600/30 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0f0a1f] to-transparent" />
+        <div
+          className="h-28 relative overflow-hidden rounded-t-2xl"
+          style={{
+            background: channel.bannerUrl
+              ? `url(${channel.bannerUrl}) center/cover no-repeat`
+              : 'linear-gradient(90deg, rgba(124,58,237,0.15), rgba(236,72,153,0.08))',
+          }}
+        >
+          <div className="absolute inset-0 bg-black/20 mix-blend-multiply" />
           {/* Decorative elements */}
           <div className="absolute top-4 right-4 w-20 h-20 bg-purple-500/20 rounded-full blur-2xl" />
           <div className="absolute bottom-4 left-4 w-16 h-16 bg-pink-500/20 rounded-full blur-2xl" />
@@ -37,6 +51,11 @@ export default function ChannelCard({ channelId }: { channelId: string }) {
                   src={channel.thumbnailUrl}
                   alt={channel.name}
                   className="w-full h-full rounded-2xl object-cover"
+                  onError={(e) => {
+                    const t = e.currentTarget as HTMLImageElement;
+                    t.onerror = null;
+                    t.src = '/images/placeholder-channel.svg';
+                  }}
                 />
               ) : (
                 <Tv className="w-7 h-7 text-white" />
@@ -46,20 +65,20 @@ export default function ChannelCard({ channelId }: { channelId: string }) {
               <h3 className="text-lg font-bold text-white group-hover:text-purple-300 transition-colors truncate">
                 {channel.name}
               </h3>
-              <p className="text-xs text-white/40">{channel.subscriberCount} subscribers</p>
+              <p className="text-xs text-white/40">
+                {getDisplaySubscriberCount(channel.youtubeChannelId, channel.subscriberCount)} subscribers
+              </p>
             </div>
           </div>
 
           <p className="text-sm text-white/50 line-clamp-2 mb-4">{channel.description}</p>
 
+          {action ? <div className="mb-4">{action}</div> : null}
+
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1.5 text-xs text-white/40">
               <Video className="w-3.5 h-3.5" />
               <span>{channel.videoCount} videos</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-xs text-white/40">
-              <Users className="w-3.5 h-3.5" />
-              <span>{channelBatches.length} batches</span>
             </div>
           </div>
         </div>

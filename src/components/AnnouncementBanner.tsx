@@ -1,8 +1,15 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Megaphone, AlertCircle, Info, AlertTriangle, Bell } from 'lucide-react';
+import { AlertCircle, Info, AlertTriangle, Bell } from 'lucide-react';
 import { Announcement } from '@/data/types';
+
+const announcementDateFormatter = new Intl.DateTimeFormat('en-US', {
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
 
 const priorityStyles = {
   urgent: 'bg-red-500/10 border-red-500/30 text-red-300',
@@ -41,7 +48,7 @@ export default function AnnouncementBanner({ announcements }: { announcements: A
               <p className="text-xs opacity-70 mt-0.5 line-clamp-2">{ann.content}</p>
             </div>
             <span className="text-[10px] opacity-50 flex-shrink-0">
-              {new Date(ann.createdAt).toLocaleDateString()}
+              {announcementDateFormatter.format(new Date(ann.createdAt))}
             </span>
           </motion.div>
         );

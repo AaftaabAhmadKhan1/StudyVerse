@@ -39,7 +39,7 @@ export default function AdminSidebar() {
           </div>
           <div>
             <h1 className="text-base font-extrabold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-              YT Wallah
+              PW StudyVerse
             </h1>
             <p className="text-[10px] text-white/30 font-medium tracking-wider uppercase">Admin Panel</p>
           </div>

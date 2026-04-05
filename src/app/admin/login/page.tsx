@@ -47,7 +47,7 @@ export default function AdminLoginPage() {
             </div>
           </div>
           <h1 className="text-2xl font-bold text-white mb-1">Admin Panel</h1>
-          <p className="text-sm text-white/40">YT Wallah Management Console</p>
+          <p className="text-sm text-white/40">PW StudyVerse Management Console</p>
         </div>
 
         {/* Login Form */}
@@ -112,7 +112,7 @@ export default function AdminLoginPage() {
 
           <div className="mt-6 pt-4 border-t border-white/5 text-center">
             <Link href="/" className="text-sm text-purple-400 hover:text-purple-300 transition-colors">
-              ← Back to YT Wallah
+              ← Back to PW StudyVerse
             </Link>
           </div>
         </div>

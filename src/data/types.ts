@@ -1,5 +1,5 @@
 // ============================================================
-// YT Wallah - Data Types
+// PW StudyVerse - Data Types
 // ============================================================
 
 export interface Channel {
@@ -54,6 +54,29 @@ export interface Announcement {
   expiresAt?: string;
 }
 
+export interface StudyResourceNote {
+  id: string;
+  title: string;
+  board: 'CBSE' | 'ICSE';
+  classLevel: '9th' | '10th' | '11th' | '12th';
+  format: 'pdf' | 'drive';
+  url: string;
+  thumbnailUrl?: string;
+  description?: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface BattlePromoVideo {
+  id: string;
+  board: 'CBSE' | 'ICSE';
+  classLevel: '9th' | '10th' | '11th' | '12th';
+  title: string;
+  videoUrl: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
 export interface Note {
   id: string;
   videoId: string;
@@ -100,6 +123,9 @@ export interface SiteSettings {
   maintenanceMode: boolean;
   welcomeMessage: string;
   youtubeApiKey: string;
+  battleOfBrainsDemoVideoId: string;
+  battlePromoVideos: BattlePromoVideo[];
+  studyNotes: StudyResourceNote[];
 }
 
 // YouTube API types

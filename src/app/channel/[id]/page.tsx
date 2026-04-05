@@ -4,9 +4,11 @@ import { use, useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Navigation from '@/components/Navigation';
 import FooterNew from '@/components/FooterNew';
+import ChannelSubscribeButton from '@/components/ChannelSubscribeButton';
+import { useAuth } from '@/contexts/AuthContext';
 import { useYTWallah } from '@/contexts/YTWallahContext';
 import {
-  Tv, ArrowLeft, Bell, ExternalLink, Users, Video,
+  Tv, ArrowLeft, ExternalLink, Users, Video,
   Play, Clock, Eye, Flame, Radio, ListVideo, Info,
   Loader2, ChevronRight, MessageSquare,
   Heart, Share2, Bookmark,
@@ -75,6 +77,7 @@ function timeAgo(dateStr: string) {
 export default function ChannelPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { channels, siteSettings } = useYTWallah();
+  const { getDisplaySubscriberCount } = useAuth();
   const channel = channels.find(c => c.id === id);
 
   const [activeTab, setActiveTab] = useState<TabKey>('videos');
@@ -324,16 +327,16 @@ export default function ChannelPage({ params }: { params: Promise<{ id: string }
             <div className="flex-1 min-w-0">
               <h1 className="text-2xl md:text-3xl font-bold text-white">{channel.name}</h1>
               <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-                <span className="text-xs text-white/40 flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {channel.subscriberCount} subscribers</span>
+                <span className="text-xs text-white/40 flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {getDisplaySubscriberCount(channel.youtubeChannelId, channel.subscriberCount)} subscribers</span>
                 <span className="text-xs text-white/40 flex items-center gap-1"><Video className="w-3.5 h-3.5" /> {channel.videoCount} videos</span>
               </div>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
-              <a href={`https://www.youtube.com/channel/${channel.youtubeChannelId}?sub_confirmation=1`}
-                target="_blank" rel="noopener noreferrer"
-                className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-full transition-colors flex items-center gap-2 shadow-lg shadow-red-500/20">
-                <Bell className="w-4 h-4" /> Subscribe
-              </a>
+              <ChannelSubscribeButton
+                channelId={channel.youtubeChannelId}
+                className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-full transition-colors flex items-center gap-2 shadow-lg shadow-red-500/20 disabled:cursor-default disabled:opacity-100"
+                subscribedClassName="px-5 py-2.5 bg-emerald-600 text-white text-sm font-semibold rounded-full transition-colors flex items-center gap-2 shadow-lg shadow-emerald-500/20 cursor-default"
+              />
               <a href={`https://www.youtube.com/channel/${channel.youtubeChannelId}`}
                 target="_blank" rel="noopener noreferrer"
                 className="p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-colors">
@@ -384,10 +387,17 @@ export default function ChannelPage({ params }: { params: Promise<{ id: string }
             <AnimatePresence mode="wait">
               <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
                 {/* Videos tab */}
-                {activeTab === 'videos' && <VideoGrid items={videos} emptyMsg="No videos found on this channel" />}
+                {activeTab === 'videos' && (
+                  <VideoGrid
+                    items={videos}
+                    emptyMsg="No videos found on this channel"
+                  />
+                )}
 
                 {/* Shorts tab */}
-                {activeTab === 'shorts' && <ShortsGrid items={shorts} />}
+                {activeTab === 'shorts' && (
+                  <ShortsGrid items={shorts} />
+                )}
 
                 {/* Live tab */}
                 {activeTab === 'live' && (
@@ -816,7 +826,7 @@ export default function ChannelPage({ params }: { params: Promise<{ id: string }
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="bg-[#1a1035]/60 rounded-xl p-4 border border-purple-500/5">
-                          <p className="text-2xl font-bold text-white">{channel.subscriberCount}</p>
+                          <p className="text-2xl font-bold text-white">{getDisplaySubscriberCount(channel.youtubeChannelId, channel.subscriberCount)}</p>
                           <p className="text-xs text-white/40 mt-1">Subscribers</p>
                         </div>
                         <div className="bg-[#1a1035]/60 rounded-xl p-4 border border-purple-500/5">
@@ -832,11 +842,12 @@ export default function ChannelPage({ params }: { params: Promise<{ id: string }
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 text-red-400 rounded-lg text-xs border border-red-500/10 hover:bg-red-500/20 transition-all">
                             <Play className="w-3 h-3" /> YouTube Channel
                           </a>
-                          <a href={`https://www.youtube.com/channel/${channel.youtubeChannelId}?sub_confirmation=1`}
-                            target="_blank" rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-500/10 text-purple-400 rounded-lg text-xs border border-purple-500/10 hover:bg-purple-500/20 transition-all">
-                            <Bell className="w-3 h-3" /> Subscribe
-                          </a>
+                          <ChannelSubscribeButton
+                            channelId={channel.youtubeChannelId}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-500/10 text-purple-400 rounded-lg text-xs border border-purple-500/10 hover:bg-purple-500/20 transition-all disabled:cursor-default disabled:opacity-100"
+                            subscribedClassName="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 text-emerald-300 rounded-lg text-xs border border-emerald-500/20 transition-all cursor-default"
+                            iconClassName="w-3 h-3"
+                          />
                         </div>
                       </div>
                     </div>

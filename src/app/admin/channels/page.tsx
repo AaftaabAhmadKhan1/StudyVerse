@@ -79,10 +79,6 @@ export default function AdminChannelsPage() {
 
   const handleFetch = async () => {
     if (!handle.trim()) return;
-    if (!siteSettings.youtubeApiKey) {
-      setFetchError('YouTube API Key is not set. Go to Settings → YouTube API Key to add it.');
-      return;
-    }
     setFetching(true);
     setFetchError('');
     try {

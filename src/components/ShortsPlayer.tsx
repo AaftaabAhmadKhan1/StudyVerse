@@ -73,6 +73,7 @@ interface Props {
   onClose?: () => void;
   showBackButton?: boolean;
   backHref?: string;
+  apiKey?: string;
 }
 
 // ---------- Helpers ----------
@@ -96,10 +97,10 @@ export default function ShortsPlayer({
   onClose,
   showBackButton = true,
   backHref,
+  apiKey,
 }: Props) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [direction, setDirection] = useState(0); // -1 up, 1 down
-  const [liked, setLiked] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [showDescription, setShowDescription] = useState(false);
   const [muted, setMuted] = useState(false);
@@ -127,19 +128,42 @@ export default function ShortsPlayer({
   const [shortPlayerReady, setShortPlayerReady] = useState(false);
   const [showTapIndicator, setShowTapIndicator] = useState<'play' | 'pause' | null>(null);
   const shortPollerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [likedShortIds, setLikedShortIds] = useState<Record<string, boolean>>({});
 
   const currentShort = shorts[currentIndex];
+  const liked = !!(currentShort && likedShortIds[currentShort.id]);
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem('pw-studyverse-short-likes');
+      setLikedShortIds(stored ? JSON.parse(stored) : {});
+    } catch {
+      setLikedShortIds({});
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem('pw-studyverse-short-likes', JSON.stringify(likedShortIds));
+    } catch {
+      /* ignore */
+    }
+  }, [likedShortIds]);
 
   // ---- Fetch video info ----
   const fetchVideoInfo = useCallback(async (videoId: string) => {
+    if (!apiKey) return;
     setInfoLoading(true);
     setVideoInfo(null);
-    setLiked(false);
     setComments([]);
     setCommentsNextPage(null);
     setCommentsDisabled(false);
     try {
-      const res = await fetch(`/api/youtube/video?videoId=${videoId}`);
+      const res = await fetch('/api/youtube/video', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoId, apiKey }),
+      });
       if (res.ok) {
         const data = await res.json();
         setVideoInfo(data);
@@ -148,14 +172,18 @@ export default function ShortsPlayer({
       /* ignore */
     }
     setInfoLoading(false);
-  }, []);
+  }, [apiKey]);
 
   // ---- Fetch comments ----
   const fetchComments = useCallback(async (videoId: string, pageToken?: string) => {
+    if (!apiKey) return;
     setCommentsLoading(true);
     try {
-      const url = `/api/youtube/comments?videoId=${videoId}${pageToken ? `&pageToken=${pageToken}` : ''}`;
-      const res = await fetch(url);
+      const res = await fetch('/api/youtube/comments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoId, apiKey, pageToken }),
+      });
       if (res.ok) {
         const data = await res.json();
         if (data.disabled) {
@@ -169,7 +197,7 @@ export default function ShortsPlayer({
       /* ignore */
     }
     setCommentsLoading(false);
-  }, []);
+  }, [apiKey]);
 
   // Fetch info when short changes
   useEffect(() => {
@@ -192,18 +220,18 @@ export default function ShortsPlayer({
       shortsPlayerDivRef.current.innerHTML = '';
       shortsPlayerDivRef.current.appendChild(el);
 
-      player = new (window as any).YT.Player(el, {
-        videoId: currentShort?.id,
-        playerVars: {
-          autoplay: 1,
-          controls: 0,
-          modestbranding: 1,
-          rel: 0,
-          showinfo: 0,
-          iv_load_policy: 3,
-          disablekb: 1,
-          fs: 0,
-          playsinline: 1,
+        player = new (window as any).YT.Player(el, {
+          videoId: currentShort?.id,
+          playerVars: {
+            autoplay: 1,
+            controls: 1,
+            modestbranding: 1,
+            rel: 0,
+            showinfo: 0,
+            iv_load_policy: 3,
+            disablekb: 0,
+            fs: 1,
+            playsinline: 1,
           enablejsapi: 1,
           loop: 1,
           playlist: currentShort?.id,
@@ -454,11 +482,10 @@ export default function ShortsPlayer({
                   className="shorts-player-wrapper absolute inset-0 w-full h-full rounded-xl overflow-hidden"
                 />
 
-                {/* Transparent overlay — blocks YT watermark hover + tap toggle */}
-                <div
-                  className="absolute inset-0 z-[5] rounded-xl cursor-pointer"
-                  onClick={handleTapToggle}
-                />
+                 {/* Passive layer only; must not block the YouTube player UI */}
+                  <div
+                    className="absolute inset-0 z-[5] rounded-xl pointer-events-none"
+                  />
 
                 {/* Tap play/pause indicator */}
                 <AnimatePresence>
@@ -566,7 +593,12 @@ export default function ShortsPlayer({
         <div className="absolute right-[-60px] md:right-[-70px] bottom-1/3 flex flex-col items-center gap-5 z-20">
           {/* Like */}
           <button
-            onClick={() => setLiked(!liked)}
+            onClick={() =>
+              setLikedShortIds((prev) => ({
+                ...prev,
+                [currentShort.id]: !prev[currentShort.id],
+              }))
+            }
             className="flex flex-col items-center gap-1 group"
           >
             <div

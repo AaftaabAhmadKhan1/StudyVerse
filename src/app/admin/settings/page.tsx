@@ -13,17 +13,20 @@ import {
   Palette,
   MessageSquare,
   Link2,
-  Key,
-  Eye,
-  EyeOff,
+  PlayCircle,
+  Plus,
+  Trash2,
+  Files,
 } from 'lucide-react';
+
+const BOARD_OPTIONS = ['CBSE', 'ICSE'] as const;
+const CLASS_OPTIONS = ['9th', '10th', '11th', '12th'] as const;
 
 export default function AdminSettingsPage() {
   const router = useRouter();
   const { isAdminAuthenticated, mounted, siteSettings, updateSiteSettings } = useYTWallah();
   const [form, setForm] = useState(siteSettings);
   const [saved, setSaved] = useState(false);
-  const [showApiKey, setShowApiKey] = useState(false);
 
   useEffect(() => {
     if (mounted && !isAdminAuthenticated) router.push('/admin/login');
@@ -51,17 +54,21 @@ export default function AdminSettingsPage() {
   const handleReset = () => {
     if (confirm('Reset all settings to defaults?')) {
       const defaults = {
-        siteName: 'YT Wallah',
+        siteName: 'PW StudyVerse',
         siteTagline: 'Your Gateway to Physics Wallah Universe',
         siteDescription: 'Watch PW lectures ad-free with notes, organized by batch and subject.',
         logoUrl: '',
         primaryColor: '#7c3aed',
         accentColor: '#ec4899',
-        footerText: '© 2025 YT Wallah. Not affiliated with Physics Wallah.',
+        footerText: '© 2026 PW StudyVerse. Uses YouTube embeds and YouTube API Services.',
         socialLinks: { youtube: '', telegram: '', twitter: '', instagram: '', website: '' },
         maintenanceMode: false,
-        welcomeMessage: 'Welcome to YT Wallah — your distraction-free PW learning hub!',
+        welcomeMessage: 'Welcome to PW StudyVerse — your focused PW learning hub!',
+        // preserve existing API key even though it's not editable
         youtubeApiKey: form.youtubeApiKey,
+        battleOfBrainsDemoVideoId: '',
+        battlePromoVideos: [],
+        studyNotes: [],
       };
       setForm(defaults);
       updateSiteSettings(defaults);
@@ -234,7 +241,6 @@ export default function AdminSettingsPage() {
               </label>
             </motion.div>
 
-            {/* YouTube API */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -242,44 +248,270 @@ export default function AdminSettingsPage() {
               className="bg-[#0f0a1f]/60 border border-purple-500/10 rounded-2xl p-6 space-y-4"
             >
               <h2 className="text-sm font-semibold text-white/80 flex items-center gap-2">
-                <Key className="w-4 h-4 text-red-400" /> YouTube API
+                <PlayCircle className="w-4 h-4 text-cyan-400" /> Battle Of Brain
               </h2>
               <div>
                 <label className="text-xs font-medium text-white/50 block mb-1">
-                  YouTube Data API v3 Key
+                  Demo Video YouTube ID or URL
                 </label>
-                <div className="flex items-center gap-3">
-                  <div className="relative flex-1">
-                    <input
-                      type={showApiKey ? 'text' : 'password'}
-                      value={form.youtubeApiKey}
-                      onChange={(e) => setForm({ ...form, youtubeApiKey: e.target.value })}
-                      className="w-full px-4 py-2.5 pr-11 bg-[#1a1035] border border-purple-500/10 rounded-xl text-white text-sm focus:outline-none focus:border-purple-500/30 font-mono"
-                      placeholder="AIzaSy..."
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowApiKey(!showApiKey)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60"
-                    >
-                      {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-                <p className="text-[10px] text-white/30 mt-2">
-                  Required for auto-fetching channel data. Get a free key at{' '}
-                  <a
-                    href="https://console.cloud.google.com/apis/credentials"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="underline hover:text-white/50"
-                  >
-                    Google Cloud Console
-                  </a>{' '}
-                  → Enable &quot;YouTube Data API v3&quot; → Create API Key.
+                <input
+                  value={form.battleOfBrainsDemoVideoId}
+                  onChange={(e) =>
+                    setForm({ ...form, battleOfBrainsDemoVideoId: e.target.value })
+                  }
+                  className="w-full px-4 py-2.5 bg-[#1a1035] border border-purple-500/10 rounded-xl text-white text-sm focus:outline-none focus:border-purple-500/30"
+                  placeholder="e.g. dQw4w9WgXcQ or full YouTube link"
+                />
+                <p className="mt-2 text-xs text-white/35">
+                  This video opens when the user clicks `Watch Demo` on the Battle Of Brain home
+                  page.
                 </p>
               </div>
             </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.22 }}
+              className="bg-[#0f0a1f]/60 border border-purple-500/10 rounded-2xl p-6 space-y-4"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-sm font-semibold text-white/80 flex items-center gap-2">
+                  <PlayCircle className="w-4 h-4 text-pink-400" /> Class-wise Live Battle Promo Videos
+                </h2>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setForm({
+                      ...form,
+                      battlePromoVideos: [
+                        ...(form.battlePromoVideos || []),
+                        {
+                          id: `promo-${Date.now()}`,
+                          board: 'CBSE',
+                          classLevel: '10th',
+                          title: '',
+                          videoUrl: '',
+                          isActive: true,
+                          createdAt: new Date().toISOString(),
+                        },
+                      ],
+                    })
+                  }
+                  className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/70"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Promo
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {(form.battlePromoVideos || []).map((promo, index) => (
+                  <div key={promo.id} className="rounded-2xl border border-white/8 bg-[#1a1035]/70 p-4 space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                      <input
+                        value={promo.title}
+                        onChange={(e) => {
+                          const next = [...(form.battlePromoVideos || [])];
+                          next[index] = { ...promo, title: e.target.value };
+                          setForm({ ...form, battlePromoVideos: next });
+                        }}
+                        className="px-4 py-2.5 bg-[#100a22] border border-purple-500/10 rounded-xl text-white text-sm"
+                        placeholder="Promo title"
+                      />
+                      <select
+                        value={promo.board}
+                        onChange={(e) => {
+                          const next = [...(form.battlePromoVideos || [])];
+                          next[index] = { ...promo, board: e.target.value as 'CBSE' | 'ICSE' };
+                          setForm({ ...form, battlePromoVideos: next });
+                        }}
+                        className="px-4 py-2.5 bg-[#100a22] border border-purple-500/10 rounded-xl text-white text-sm"
+                      >
+                        {BOARD_OPTIONS.map((board) => (
+                          <option key={board} value={board}>
+                            {board}
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        value={promo.classLevel}
+                        onChange={(e) => {
+                          const next = [...(form.battlePromoVideos || [])];
+                          next[index] = { ...promo, classLevel: e.target.value as '9th' | '10th' | '11th' | '12th' };
+                          setForm({ ...form, battlePromoVideos: next });
+                        }}
+                        className="px-4 py-2.5 bg-[#100a22] border border-purple-500/10 rounded-xl text-white text-sm"
+                      >
+                        {CLASS_OPTIONS.map((classLevel) => (
+                          <option key={classLevel} value={classLevel}>
+                            {classLevel}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setForm({
+                            ...form,
+                            battlePromoVideos: (form.battlePromoVideos || []).filter((item) => item.id !== promo.id),
+                          })
+                        }
+                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-300"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Remove
+                      </button>
+                    </div>
+                    <input
+                      value={promo.videoUrl}
+                      onChange={(e) => {
+                        const next = [...(form.battlePromoVideos || [])];
+                        next[index] = { ...promo, videoUrl: e.target.value };
+                        setForm({ ...form, battlePromoVideos: next });
+                      }}
+                      className="w-full px-4 py-2.5 bg-[#100a22] border border-purple-500/10 rounded-xl text-white text-sm"
+                      placeholder="YouTube URL or video ID"
+                    />
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.23 }}
+              className="bg-[#0f0a1f]/60 border border-purple-500/10 rounded-2xl p-6 space-y-4"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-sm font-semibold text-white/80 flex items-center gap-2">
+                  <Files className="w-4 h-4 text-cyan-400" /> Board and Class Wise Notes
+                </h2>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setForm({
+                      ...form,
+                      studyNotes: [
+                        ...(form.studyNotes || []),
+                        {
+                          id: `note-${Date.now()}`,
+                          title: '',
+                          board: 'CBSE',
+                          classLevel: '10th',
+                          format: 'pdf',
+                          url: '',
+                          thumbnailUrl: '',
+                          description: '',
+                          isActive: true,
+                          createdAt: new Date().toISOString(),
+                        },
+                      ],
+                    })
+                  }
+                  className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/70"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Note
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {(form.studyNotes || []).map((note, index) => (
+                  <div key={note.id} className="rounded-2xl border border-white/8 bg-[#1a1035]/70 p-4 space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+                      <input
+                        value={note.title}
+                        onChange={(e) => {
+                          const next = [...(form.studyNotes || [])];
+                          next[index] = { ...note, title: e.target.value };
+                          setForm({ ...form, studyNotes: next });
+                        }}
+                        className="px-4 py-2.5 bg-[#100a22] border border-purple-500/10 rounded-xl text-white text-sm"
+                        placeholder="Note title"
+                      />
+                      <select
+                        value={note.board}
+                        onChange={(e) => {
+                          const next = [...(form.studyNotes || [])];
+                          next[index] = { ...note, board: e.target.value as 'CBSE' | 'ICSE' };
+                          setForm({ ...form, studyNotes: next });
+                        }}
+                        className="px-4 py-2.5 bg-[#100a22] border border-purple-500/10 rounded-xl text-white text-sm"
+                      >
+                        {BOARD_OPTIONS.map((board) => (
+                          <option key={board} value={board}>
+                            {board}
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        value={note.classLevel}
+                        onChange={(e) => {
+                          const next = [...(form.studyNotes || [])];
+                          next[index] = { ...note, classLevel: e.target.value as '9th' | '10th' | '11th' | '12th' };
+                          setForm({ ...form, studyNotes: next });
+                        }}
+                        className="px-4 py-2.5 bg-[#100a22] border border-purple-500/10 rounded-xl text-white text-sm"
+                      >
+                        {CLASS_OPTIONS.map((classLevel) => (
+                          <option key={classLevel} value={classLevel}>
+                            {classLevel}
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        value={note.format}
+                        onChange={(e) => {
+                          const next = [...(form.studyNotes || [])];
+                          next[index] = { ...note, format: e.target.value as 'pdf' | 'drive' };
+                          setForm({ ...form, studyNotes: next });
+                        }}
+                        className="px-4 py-2.5 bg-[#100a22] border border-purple-500/10 rounded-xl text-white text-sm"
+                      >
+                        <option value="pdf">PDF</option>
+                        <option value="drive">Google Drive</option>
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setForm({
+                            ...form,
+                            studyNotes: (form.studyNotes || []).filter((item) => item.id !== note.id),
+                          })
+                        }
+                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-300"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Remove
+                      </button>
+                    </div>
+                    <input
+                      value={note.url}
+                      onChange={(e) => {
+                        const next = [...(form.studyNotes || [])];
+                        next[index] = { ...note, url: e.target.value };
+                        setForm({ ...form, studyNotes: next });
+                      }}
+                      className="w-full px-4 py-2.5 bg-[#100a22] border border-purple-500/10 rounded-xl text-white text-sm"
+                      placeholder="PDF URL or Google Drive link"
+                    />
+                    <input
+                      value={note.description || ''}
+                      onChange={(e) => {
+                        const next = [...(form.studyNotes || [])];
+                        next[index] = { ...note, description: e.target.value };
+                        setForm({ ...form, studyNotes: next });
+                      }}
+                      className="w-full px-4 py-2.5 bg-[#100a22] border border-purple-500/10 rounded-xl text-white text-sm"
+                      placeholder="Short description"
+                    />
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+
 
             {/* Social Links */}
             <motion.div

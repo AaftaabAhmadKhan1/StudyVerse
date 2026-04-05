@@ -20,7 +20,7 @@ require('dotenv').config();
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
       viewport: { width: 1280, height: 720 },
     });
-
+                     
     const page = await context.newPage();
 
     console.log('[INFO] Navigating to YouTube...');

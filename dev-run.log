@@ -1,0 +1,140 @@
+
+> yt-wallah@1.0.0 dev
+> next dev
+
+   ▲ Next.js 15.5.12
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.0.43:3000
+   - Environments: .env.local, .env
+   - Experiments (use with caution):
+     · optimizePackageImports
+
+ ✓ Starting...
+ ✓ Ready in 3.8s
+ ○ Compiling / ...
+ ✓ Compiled / in 6s (1273 modules)
+ GET / 200 in 7251ms
+ ✓ Compiled in 1478ms (574 modules)
+ ✓ Compiled in 1304ms (560 modules)
+ ✓ Compiled in 456ms (574 modules)
+ ✓ Compiled in 543ms (574 modules)
+ ✓ Compiled in 513ms (574 modules)
+ ✓ Compiled in 970ms (574 modules)
+ ✓ Compiled in 912ms (574 modules)
+ ✓ Compiled in 1946ms (574 modules)
+ ✓ Compiled in 558ms (574 modules)
+ ✓ Compiled in 470ms (574 modules)
+ ✓ Compiled in 401ms (574 modules)
+ ✓ Compiled in 472ms (574 modules)
+ ✓ Compiled in 542ms (574 modules)
+ ○ Compiling /channel/[id] ...
+ ✓ Compiled /channel/[id] in 3.2s (1292 modules)
+ GET /whats-next 200 in 4348ms
+ GET /channel/test 200 in 5742ms
+ ○ Compiling / ...
+ ✓ Compiled / in 763ms (736 modules)
+ GET / 200 in 1534ms
+ ○ Compiling /api/youtube/channel-content ...
+ ✓ Compiled /api/youtube/channel-content in 2.4s (1465 modules)
+ GET /api/auth/session 200 in 4174ms
+ POST /api/youtube/channel-content 200 in 5460ms
+ ○ Compiling /my-channels ...
+ ✓ Compiled /my-channels in 835ms (1479 modules)
+ GET /my-channels 200 in 1115ms
+ GET /channel/ch-1773309350881 200 in 129ms
+ POST /api/youtube/channel-content 200 in 801ms
+ POST /api/youtube/channel-content 200 in 893ms
+ ○ Compiling /watch/[videoId] ...
+ ✓ Compiled /watch/[videoId] in 1653ms (1526 modules)
+ GET /watch/d6ZdO1t3RUE 200 in 3153ms
+ ○ Compiling /api/youtube/video ...
+ ✓ Compiled /api/youtube/video in 660ms (1528 modules)
+ POST /api/youtube/video 200 in 989ms
+ POST /api/youtube/video 200 in 1706ms
+ POST /api/youtube/channel-content 200 in 112ms
+ POST /api/youtube/channel-content 200 in 132ms
+ ✓ Compiled /api/youtube/channel-content in 1785ms (1378 modules)
+ ✓ Compiled in 1ms (765 modules)
+ POST /api/youtube/channel-content 200 in 1397ms
+ GET /channel/ch-1773309350881 200 in 1122ms
+ ✓ Compiled /api/auth/[...nextauth] in 447ms (887 modules)
+ GET /api/auth/session 200 in 809ms
+ GET /channel/ch-1773309350881 200 in 668ms
+ GET /api/auth/session 200 in 61ms
+ POST /api/youtube/channel-content 200 in 107ms
+ ✓ Compiled in 1649ms (1378 modules)
+ GET /channel/ch-1773309350881 200 in 764ms
+ ✓ Compiled /api/youtube/channel-content in 448ms (765 modules)
+ POST /api/youtube/channel-content 200 in 2236ms
+ ○ Compiling /api/auth/[...nextauth] ...
+ ✓ Compiled /api/auth/[...nextauth] in 513ms (885 modules)
+ GET /api/auth/session 200 in 873ms
+ GET /api/auth/session 200 in 52ms
+ GET /api/auth/session 200 in 38ms
+ GET /api/auth/session 200 in 54ms
+ GET /api/auth/session 200 in 628ms
+ GET /channel/ch-1773309350881 200 in 1810ms
+ GET /api/auth/session 200 in 82ms
+ ○ Compiling /api/youtube/channel-content ...
+ ✓ Compiled /api/youtube/channel-content in 1380ms (887 modules)
+ POST /api/youtube/channel-content 200 in 2675ms
+ GET /api/auth/session 200 in 1198ms
+ GET /channel/ch-1773309350881 200 in 1925ms
+ GET /api/auth/session 200 in 149ms
+ POST /api/youtube/channel-content 200 in 1435ms
+ ○ Compiling /whats-next ...
+ ✓ Compiled /whats-next in 1179ms (901 modules)
+ GET /whats-next 200 in 1401ms
+ POST /api/youtube/channel-content 200 in 100ms
+ POST /api/youtube/channel-content 200 in 101ms
+ GET /whats-next 200 in 47ms
+ GET /api/auth/session 200 in 1228ms
+ GET /api/auth/session 200 in 73ms
+ POST /api/youtube/channel-content 200 in 67ms
+ POST /api/youtube/channel-content 200 in 78ms
+ GET /api/auth/session 200 in 68ms
+ GET /api/auth/session 200 in 203ms
+ GET /api/auth/session 200 in 125ms
+ GET /api/auth/session 200 in 645ms
+ ✓ Compiled in 13.7s (1392 modules)
+ GET /channel/ch-1773309350881 200 in 892ms
+ ✓ Compiled in 881ms (630 modules)
+ GET /channel/ch-1773309350881 200 in 447ms
+ ✓ Compiled /api/auth/[...nextauth] in 485ms (899 modules)
+ GET /api/auth/session 200 in 1335ms
+ GET /api/auth/session 200 in 73ms
+ GET /channel/ch-1773309350881 200 in 1098ms
+ GET /api/auth/session 200 in 74ms
+ ○ Compiling /api/youtube/channel-content ...
+ ✓ Compiled /api/youtube/channel-content in 1211ms (901 modules)
+ GET /channel/ch-1773309350881 200 in 1039ms
+ POST /api/youtube/channel-content 200 in 15010ms
+ GET /watch/3cz0A2J1c90 200 in 504ms
+ ○ Compiling /api/youtube/video ...
+ ✓ Compiled /api/youtube/video in 1057ms (903 modules)
+ POST /api/youtube/video 200 in 1451ms
+ POST /api/youtube/video 200 in 1446ms
+ POST /api/youtube/channel-content 200 in 600ms
+ POST /api/youtube/channel-content 200 in 639ms
+ GET /api/auth/session 200 in 538ms
+ GET /api/auth/session 200 in 364ms
+ ○ Compiling /login ...
+ ✓ Compiled /login in 8.1s (1550 modules)
+ GET /login 200 in 10062ms
+ GET /login 200 in 358ms
+ ○ Compiling /api/auth/config-status ...
+ ✓ Compiled /api/auth/config-status in 1538ms (1552 modules)
+ GET /api/auth/config-status 200 in 1906ms
+ GET /api/auth/config-status 200 in 682ms
+ ○ Compiling /signup ...
+ GET /login 200 in 2583ms
+ ✓ Compiled /signup in 4.5s (1567 modules)
+ GET /signup 200 in 5179ms
+ GET /signup 200 in 72ms
+ GET /api/auth/session 200 in 906ms
+ ✓ Compiled in 16s (1396 modules)
+ GET /signup 200 in 5137ms
+   Reload env: .env.local
+ ✓ Compiled in 4.4s (1396 modules)
+ ○ Compiling / ...
+ ✓ Compiled / in 3.6s (783 modules)

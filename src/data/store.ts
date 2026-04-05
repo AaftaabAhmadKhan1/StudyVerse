@@ -1,18 +1,18 @@
 // ============================================================
-// YT Wallah - Default Data & Sample Content
+// PW StudyVerse - Default Data & Sample Content
 // ============================================================
 
 import { Channel, Batch, Video, Announcement, SiteSettings } from './types';
 
 // Default Site Settings
 export const defaultSiteSettings: SiteSettings = {
-  siteName: 'YT Wallah',
-  siteTagline: 'Distraction-Free Learning from Physics Wallah',
+  siteName: 'PW StudyVerse',
+  siteTagline: 'Focused learning with official PW content',
   siteDescription: 'Access all Physics Wallah YouTube content in one place — no distractions, just pure learning.',
   logoUrl: '',
   primaryColor: '#7c3aed',
   accentColor: '#ec4899',
-  footerText: '© 2026 YT Wallah. Built with ❤️ for students.',
+  footerText: '© 2026 PW StudyVerse. Uses YouTube embeds and YouTube API Services in a compliance-first study workflow.',
   socialLinks: {
     youtube: 'https://youtube.com/@PhysicsWallah',
     telegram: 'https://t.me/physicswallah',
@@ -20,8 +20,11 @@ export const defaultSiteSettings: SiteSettings = {
     twitter: 'https://twitter.com/PhysicsWallah',
   },
   maintenanceMode: false,
-  welcomeMessage: 'Welcome to YT Wallah — Your one-stop destination for Physics Wallah content!',
-  youtubeApiKey: '',
+  welcomeMessage: 'Welcome to PW StudyVerse — your focused learning hub for official PW content.',
+  youtubeApiKey: 'AIzaSyBsGZNsD-W2Wsc_YTUng-H8-hEJ6Nr9uVg',
+  battleOfBrainsDemoVideoId: '',
+  battlePromoVideos: [],
+  studyNotes: [],
 };
 
 // Sample Channels
@@ -124,8 +127,8 @@ export const defaultVideos: Video[] = [
 export const defaultAnnouncements: Announcement[] = [
   {
     id: 'ann-001',
-    title: 'Welcome to YT Wallah!',
-    content: 'We are excited to launch YT Wallah — your distraction-free platform for Physics Wallah content. Enjoy learning!',
+    title: 'Welcome to PW StudyVerse!',
+    content: 'We are excited to launch PW StudyVerse — a focused study interface for official Physics Wallah content.',
     type: 'global',
     priority: 'high',
     isActive: true,
@@ -172,6 +175,21 @@ export function getChannels(): Channel[] {
 export function saveChannels(channels: Channel[]): void {
   if (typeof window === 'undefined') return;
   localStorage.setItem('yt-wallah-channels', JSON.stringify(channels));
+}
+
+export function getMyChannelIds(): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const stored = localStorage.getItem('yt-wallah-my-channel-ids');
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveMyChannelIds(channelIds: string[]): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem('yt-wallah-my-channel-ids', JSON.stringify(channelIds));
 }
 
 export function getBatches(): Batch[] {

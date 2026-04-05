@@ -10,6 +10,7 @@
 ## 🚀 Features
 
 - 📺 **Channel Aggregation**: Access all Physics Wallah YouTube channels in one place.
+- 🔍 **Channel Search & Add**: On the "My Channels" page users can type any channel name, see matching YouTube channels, and add them with a single click.
 - ⚡ **Distraction-Free**: Pure learning environment without comments or related video distractions.
 - 📱 **Responsive Design**: Seamless experience across mobile, tablet, and desktop.
 - 🔍 **Search & Filter**: Easily find lectures, batches, and specific topics.

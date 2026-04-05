@@ -105,7 +105,7 @@ export default function SignupPage() {
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center shadow-lg shadow-purple-500/25">
               <Play className="w-6 h-6 text-white fill-white" />
             </div>
-            <span className="text-2xl font-bold text-white">YT Wallah</span>
+            <span className="text-2xl font-bold text-white">PW StudyVerse</span>
           </Link>
           <p className="text-white/40 text-sm mt-4">Create your student account to get started</p>
         </div>

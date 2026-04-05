@@ -1,4 +1,0 @@
-{
-  "/api/docker-bot/route": "app/api/docker-bot/route.js",
-  "/page": "app/page.js"
-}

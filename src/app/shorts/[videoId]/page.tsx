@@ -2,11 +2,9 @@
 
 import { use, useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
-import Navigation from '@/components/Navigation';
 import ShortsPlayer from '@/components/ShortsPlayer';
 import { useYTWallah } from '@/contexts/YTWallahContext';
-import { Loader2, Flame } from 'lucide-react';
-import Link from 'next/link';
+import { Loader2 } from 'lucide-react';
 
 interface ShortItem {
   id: string;
@@ -24,13 +22,15 @@ export default function ShortPlayerPage({ params }: { params: Promise<{ videoId:
   const searchParams = useSearchParams();
   const channelId = searchParams.get('channel');
 
-  const { channels, videos, siteSettings } = useYTWallah();
+  const { channels, myChannels, videos, siteSettings } = useYTWallah();
   const [shorts, setShorts] = useState<ShortItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [initialIndex, setInitialIndex] = useState(0);
 
   // Resolve channel info if channelId is provided
-  const channel = channelId ? channels.find(c => c.id === channelId || c.youtubeChannelId === channelId) : null;
+  const channel = channelId
+    ? channels.find((c) => c.id === channelId || c.youtubeChannelId === channelId)
+    : null;
 
   // Fetch shorts from channel (YouTube API) or use local store
   const fetchShorts = useCallback(async () => {
@@ -66,11 +66,16 @@ export default function ShortPlayerPage({ params }: { params: Promise<{ videoId:
       } catch { /* fallback below */ }
     }
 
-    // Fallback: use local store shorts
-    const localShorts = videos.filter(v => v.type === 'short');
+    const activeChannels = myChannels.filter((item) => item.isActive);
+    const allowedChannelIds = new Set(
+      (channel ? [channel.id] : activeChannels.map((item) => item.id))
+    );
+    const localShorts = videos.filter(
+      (video) => video.type === 'short' && allowedChannelIds.has(video.channelId)
+    );
     if (localShorts.length > 0) {
-      const mapped: ShortItem[] = localShorts.map(s => {
-        const ch = channels.find(c => c.id === s.channelId);
+      const mapped: ShortItem[] = localShorts.map((s) => {
+        const ch = channels.find((c) => c.id === s.channelId);
         return {
           id: s.youtubeVideoId || s.id,
           title: s.title,
@@ -99,7 +104,7 @@ export default function ShortPlayerPage({ params }: { params: Promise<{ videoId:
     }
 
     setLoading(false);
-  }, [channel, siteSettings.youtubeApiKey, videos, channels, videoId]);
+  }, [channel, channels, myChannels, siteSettings.youtubeApiKey, videoId, videos]);
 
   useEffect(() => { fetchShorts(); }, [fetchShorts]);
 
@@ -123,6 +128,7 @@ export default function ShortPlayerPage({ params }: { params: Promise<{ videoId:
       initialIndex={initialIndex}
       backHref={backHref}
       showBackButton={true}
+      apiKey={siteSettings.youtubeApiKey}
     />
   );
 }

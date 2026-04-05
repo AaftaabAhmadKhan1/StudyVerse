@@ -18,15 +18,17 @@ import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
+import { signIn as startGoogleSignIn } from 'next-auth/react';
 
 function LoginContent() {
-  const { isAuthenticated, signIn, status } = useAuth();
+  const { isAuthenticated, status } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const [email, setEmail] = useState(searchParams.get('email') || '');
   const [emailVerified, setEmailVerified] = useState(false);
   const [checking, setChecking] = useState(false);
+  const [authConfigured, setAuthConfigured] = useState(true);
   const [error, setError] = useState('');
   const justRegistered = searchParams.get('registered') === '1';
 
@@ -36,6 +38,20 @@ function LoginContent() {
       setEmailVerified(true);
     }
   }, [searchParams, justRegistered]);
+
+  useEffect(() => {
+    const loadConfigStatus = async () => {
+      try {
+        const res = await fetch('/api/auth/config-status');
+        const data = await res.json();
+        setAuthConfigured(!!data?.googleOAuthConfigured);
+      } catch {
+        setAuthConfigured(false);
+      }
+    };
+
+    loadConfigStatus();
+  }, []);
 
   if (isAuthenticated) {
     router.push('/');
@@ -70,7 +86,7 @@ function LoginContent() {
   const features = [
     { icon: BookOpen, text: 'Save notes on any video with timestamps' },
     { icon: Bell, text: 'Get notified about new lectures & live classes' },
-    { icon: Youtube, text: 'YouTube subscriptions automatically synced' },
+    { icon: Youtube, text: 'Subscribe to supported channels without leaving PW StudyVerse' },
     { icon: Zap, text: 'Personalized learning dashboard' },
   ];
 
@@ -95,7 +111,7 @@ function LoginContent() {
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center shadow-lg shadow-purple-500/25">
               <Play className="w-6 h-6 text-white fill-white" />
             </div>
-            <span className="text-2xl font-bold text-white">YT Wallah</span>
+            <span className="text-2xl font-bold text-white">PW StudyVerse</span>
           </Link>
           <p className="text-white/40 text-sm mt-4">
             {emailVerified
@@ -215,7 +231,16 @@ function LoginContent() {
               <motion.button
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
-                onClick={signIn}
+                onClick={() => {
+                  if (!authConfigured) {
+                    setError(
+                      'Google sign-in is not configured yet. Add valid AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET values in .env.local first.'
+                    );
+                    return;
+                  }
+
+                  void startGoogleSignIn('google', { callbackUrl: '/' });
+                }}
                 disabled={status === 'loading'}
                 className="w-full py-3.5 bg-white hover:bg-gray-50 rounded-2xl text-gray-800 font-semibold text-sm flex items-center justify-center gap-3 shadow-lg transition-colors disabled:opacity-50"
               >
@@ -243,9 +268,7 @@ function LoginContent() {
               {/* Divider */}
               <div className="flex items-center gap-4 my-6">
                 <div className="flex-1 h-px bg-white/5" />
-                <span className="text-xs text-white/20">
-                  YOUR YOUTUBE ACCOUNT WILL BE CONNECTED
-                </span>
+                  <span className="text-xs text-white/20">YOUR YOUTUBE ACCOUNT WILL BE CONNECTED</span>
                 <div className="flex-1 h-px bg-white/5" />
               </div>
 
@@ -271,10 +294,19 @@ function LoginContent() {
               <div className="mt-6 flex items-start gap-2 px-1">
                 <Shield className="w-4 h-4 text-green-400/60 flex-shrink-0 mt-0.5" />
                 <p className="text-[10px] text-white/25 leading-relaxed">
-                  We only request read-only access to your YouTube data (subscriptions). We never
-                  post, modify, or delete anything on your account.
+                  We use your YouTube access to read subscriptions and, when you tap Subscribe in
+                  the app, send that subscription request to YouTube on your behalf. We do not post
+                  videos, comments, or any unrelated content.
                 </p>
               </div>
+
+              {!authConfigured && (
+                <div className="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-xs text-amber-200">
+                  Google OAuth is not configured in this local environment. Set valid
+                  `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET` values in `.env.local` to enable
+                  Subscribe and Google sign-in.
+                </div>
+              )}
             </>
           )}
         </div>

@@ -1,0 +1,575 @@
+
+> yt-wallah@1.0.0 dev
+> next dev
+
+   ▲ Next.js 15.5.12
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.2.26:3000
+   - Environments: .env.local, .env
+   - Experiments (use with caution):
+     · optimizePackageImports
+
+ ✓ Starting...
+ ✓ Ready in 3.2s
+ ○ Compiling / ...
+ ✓ Compiled / in 4.9s (1275 modules)
+ HEAD / 200 in 5725ms
+ ✓ Compiled in 1342ms (575 modules)
+ GET / 200 in 219ms
+ ⚠ Cross origin request detected from 127.0.0.1 to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+ ○ Compiling /api/auth/[...nextauth] ...
+ ✓ Compiled /api/youtube/channel-content in 3s (1405 modules)
+ GET /api/batches 404 in 4325ms
+ GET /api/settings 404 in 4308ms
+ GET /api/announcements 404 in 4315ms
+ GET /api/videos 404 in 4327ms
+ POST /api/youtube/channel-content 200 in 983ms
+ POST /api/youtube/channel-content 200 in 983ms
+ POST /api/youtube/channel-content 200 in 205ms
+ GET /api/auth/session 200 in 6073ms
+ ○ Compiling /channels ...
+ POST /api/youtube/channel-content 200 in 1737ms
+ POST /api/youtube/channel-content 200 in 5774ms
+ POST /api/youtube/channel-content 200 in 2476ms
+ ✓ Compiled /channels in 2.3s (1430 modules)
+ POST /api/youtube/channel-content 200 in 1920ms
+ POST /api/youtube/channel-content 200 in 2086ms
+ GET /channels 200 in 2743ms
+ POST /api/youtube/channel-content 200 in 2397ms
+ ○ Compiling /api/youtube/search-channels ...
+ ✓ Compiled /api/youtube/search-channels in 665ms (1433 modules)
+[search-channels] query= carr
+[search-channels] query= ca
+[search-channels] query= carry
+[search-channels] returning 10 items
+ GET /api/youtube/search-channels?q=carr 200 in 835ms
+[search-channels] returning 10 items
+ GET /api/youtube/search-channels?q=ca 200 in 1482ms
+[search-channels] returning 25 items
+ GET /api/youtube/search-channels?q=carry 200 in 669ms
+[search-channels] query= carrymin
+[search-channels] returning 10 items
+ GET /api/youtube/search-channels?q=carrymin 200 in 541ms
+[search-channels] query= next topper
+[search-channels] returning 10 items
+ GET /api/youtube/search-channels?q=next%20topper 200 in 675ms
+ ✓ Compiled /api/youtube/channel in 502ms (1435 modules)
+[api/channel] body= {
+  youtubeChannelId: 'UC6k0UlWg59GNng1T-3X71DA',
+  apiKey: 'AIzaSyBsGZNsD-W2Wsc_YTUng-H8-hEJ6Nr9uVg'
+}
+ POST /api/youtube/channel 200 in 738ms
+ POST /api/channels 404 in 314ms
+ ○ Compiling /my-channels ...
+ ✓ Compiled /my-channels in 853ms (1447 modules)
+ GET /my-channels 200 in 1003ms
+ ○ Compiling /channel/[id] ...
+ ✓ Compiled /channel/[id] in 1178ms (1480 modules)
+ GET /channel/ch-1774515341955 200 in 2182ms
+ POST /api/youtube/channel-content 200 in 3439ms
+ POST /api/youtube/channel-content 200 in 3454ms
+ ○ Compiling /watch/[videoId] ...
+ ✓ Compiled /watch/[videoId] in 1342ms (1525 modules)
+ GET /watch/v0hnOJU8IHQ 200 in 2641ms
+ ○ Compiling /api/youtube/video ...
+ ✓ Compiled /api/youtube/video in 1185ms (1527 modules)
+ POST /api/youtube/video 200 in 1561ms
+ POST /api/youtube/video 200 in 1565ms
+ POST /api/youtube/channel-content 200 in 108ms
+ POST /api/youtube/channel-content 200 in 114ms
+ GET /watch/v0hnOJU8IHQ 200 in 177ms
+ POST /api/youtube/video 200 in 229ms
+ POST /api/youtube/video 200 in 242ms
+ POST /api/youtube/channel-content 200 in 84ms
+ POST /api/youtube/channel-content 200 in 111ms
+ GET /api/auth/session 200 in 146ms
+ ○ Compiling /login ...
+ ✓ Compiled /login in 1315ms (1523 modules)
+ GET /login 200 in 1515ms
+ ○ Compiling /signup ...
+ ✓ Compiled /signup in 657ms (1538 modules)
+ GET /signup 200 in 799ms
+ GET /api/auth/session 200 in 304ms
+ GET /login 200 in 64ms
+ GET /api/auth/session 200 in 59ms
+ POST /api/youtube/channel-content 200 in 87ms
+ POST /api/youtube/channel-content 200 in 93ms
+ GET / 200 in 60ms
+ POST /api/youtube/channel-content 200 in 70ms
+ POST /api/youtube/channel-content 200 in 152ms
+ POST /api/youtube/channel-content 200 in 156ms
+ POST /api/youtube/channel-content 200 in 134ms
+ POST /api/youtube/channel-content 200 in 178ms
+ POST /api/youtube/channel-content 200 in 149ms
+ POST /api/youtube/channel-content 200 in 596ms
+ POST /api/youtube/channel-content 200 in 685ms
+ ○ Compiling /battle-of-brains ...
+ ✓ Compiled /battle-of-brains in 2.3s (1580 modules)
+ GET /battle-of-brains 200 in 2680ms
+ GET /api/auth/session 200 in 321ms
+ GET /api/auth/session 200 in 53ms
+   Reload env: .env.local
+ ✓ Compiled in 1090ms (1564 modules)
+ GET /battle-of-brains 200 in 670ms
+   Reload env: .env.local
+ ✓ Compiled in 443ms (1564 modules)
+ GET /battle-of-brains 200 in 132ms
+   Reload env: .env.local
+ ✓ Compiled in 432ms (1564 modules)
+ GET /battle-of-brains 200 in 110ms
+   Reload env: .env.local
+ ✓ Compiled in 405ms (1564 modules)
+ GET /battle-of-brains 200 in 110ms
+ GET /api/auth/session 200 in 225ms
+ GET /api/auth/session 200 in 62ms
+ GET /api/auth/session 200 in 241ms
+ GET /api/auth/session 200 in 52ms
+ ○ Compiling /api/youtube/channel-content ...
+ ✓ Compiled /api/youtube/channel-content in 1293ms (916 modules)
+ POST /api/youtube/channel-content 200 in 2201ms
+ POST /api/youtube/channel-content 200 in 2395ms
+ POST /api/youtube/channel-content 200 in 112ms
+ POST /api/youtube/channel-content 200 in 2502ms
+ POST /api/youtube/channel-content 200 in 130ms
+ GET /battle-of-brains 200 in 238ms
+ POST /api/youtube/channel-content 200 in 2857ms
+ POST /api/youtube/channel-content 200 in 2731ms
+ POST /api/youtube/channel-content 200 in 3260ms
+ ○ Compiling /battle-of-brains/dashboard ...
+ ✓ Compiled /battle-of-brains/dashboard in 1127ms (1587 modules)
+ GET /battle-of-brains/dashboard 200 in 1319ms
+ GET /api/auth/session 200 in 206ms
+ GET /api/auth/session 200 in 89ms
+ GET /battle-of-brains 200 in 44ms
+ GET /api/auth/session 200 in 51ms
+ GET /api/auth/session 200 in 33ms
+ GET /api/auth/session 200 in 47ms
+ GET /api/auth/session 200 in 56ms
+ GET /api/auth/session 200 in 65ms
+ GET /api/auth/session 200 in 56ms
+ GET /api/auth/session 200 in 53ms
+ GET /api/auth/session 200 in 38ms
+ GET /api/auth/session 200 in 45ms
+ GET /api/auth/session 200 in 50ms
+ GET /api/auth/session 200 in 48ms
+ GET /api/auth/session 200 in 42ms
+ GET /api/auth/session 200 in 46ms
+ GET /api/auth/session 200 in 79ms
+ GET /api/auth/session 200 in 49ms
+ GET /api/auth/session 200 in 79ms
+ GET / 200 in 99ms
+ POST /api/youtube/channel-content 200 in 275ms
+ POST /api/youtube/channel-content 200 in 1146ms
+ POST /api/youtube/channel-content 200 in 1344ms
+ POST /api/youtube/channel-content 200 in 1429ms
+ POST /api/youtube/channel-content 200 in 108ms
+ POST /api/youtube/channel-content 200 in 1514ms
+ POST /api/youtube/channel-content 200 in 3314ms
+ POST /api/youtube/channel-content 200 in 3845ms
+ ○ Compiling /my-channels ...
+ ✓ Compiled /my-channels in 770ms (909 modules)
+ GET /my-channels 200 in 989ms
+ GET /battle-of-brains 200 in 53ms
+ GET / 200 in 35ms
+ POST /api/youtube/channel-content 200 in 105ms
+ POST /api/youtube/channel-content 200 in 159ms
+ POST /api/youtube/channel-content 200 in 131ms
+ POST /api/youtube/channel-content 200 in 80ms
+ POST /api/youtube/channel-content 200 in 580ms
+ POST /api/youtube/channel-content 200 in 534ms
+ POST /api/youtube/channel-content 200 in 916ms
+ POST /api/youtube/channel-content 200 in 829ms
+ ○ Compiling /stream-predictor ...
+ ✓ Compiled /stream-predictor in 1788ms (1597 modules)
+ GET /stream-predictor 200 in 2248ms
+ ✓ Compiled in 634ms (683 modules)
+ GET /stream-predictor 200 in 281ms
+ GET /stream-predictor 200 in 81ms
+ POST /api/youtube/channel-content 200 in 108ms
+ POST /api/youtube/channel-content 200 in 171ms
+ POST /api/youtube/channel-content 200 in 169ms
+ POST /api/youtube/channel-content 200 in 115ms
+ POST /api/youtube/channel-content 200 in 138ms
+ POST /api/youtube/channel-content 200 in 99ms
+ POST /api/youtube/channel-content 200 in 569ms
+ POST /api/youtube/channel-content 200 in 614ms
+ GET /stream-predictor 200 in 50ms
+ POST /api/youtube/channel-content 200 in 73ms
+ POST /api/youtube/channel-content 200 in 112ms
+ POST /api/youtube/channel-content 200 in 117ms
+ POST /api/youtube/channel-content 200 in 117ms
+ POST /api/youtube/channel-content 200 in 99ms
+ POST /api/youtube/channel-content 200 in 100ms
+ POST /api/youtube/channel-content 200 in 92ms
+ POST /api/youtube/channel-content 200 in 63ms
+ ✓ Compiled /channels in 445ms (917 modules)
+ GET /channels 200 in 627ms
+ GET /battle-of-brains 200 in 40ms
+ GET /api/auth/session 200 in 127ms
+ GET /api/auth/session 200 in 73ms
+ GET / 200 in 40ms
+ POST /api/youtube/channel-content 200 in 86ms
+ POST /api/youtube/channel-content 200 in 163ms
+ POST /api/youtube/channel-content 200 in 159ms
+ POST /api/youtube/channel-content 200 in 133ms
+ POST /api/youtube/channel-content 200 in 133ms
+ POST /api/youtube/channel-content 200 in 76ms
+ POST /api/youtube/channel-content 200 in 565ms
+ POST /api/youtube/channel-content 200 in 511ms
+ GET /battle-of-brains 200 in 39ms
+ GET /api/auth/session 200 in 88ms
+ GET /api/auth/session 200 in 81ms
+ GET /api/auth/session 200 in 32ms
+ GET /api/auth/session 200 in 62ms
+ GET /api/auth/session 200 in 73ms
+ GET /api/auth/session 200 in 58ms
+ GET /api/auth/session 200 in 41ms
+ GET /battle-of-brains/dashboard 200 in 59ms
+ GET /api/auth/session 200 in 72ms
+ GET /api/auth/session 200 in 62ms
+ ✓ Compiled in 2.8s (1452 modules)
+ GET /battle-of-brains/dashboard 200 in 334ms
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /battle-of-brains/dashboard 200 in 357ms
+ ○ Compiling /api/auth/[...nextauth] ...
+ ✓ Compiled /api/auth/[...nextauth] in 1235ms (1580 modules)
+ GET /api/auth/session 200 in 2971ms
+ GET /api/videos 404 in 2996ms
+ GET /api/settings 404 in 2988ms
+ GET /api/batches 404 in 3003ms
+ GET /api/announcements 404 in 2992ms
+ ✓ Compiled in 641ms (1580 modules)
+ ✓ Compiled in 2.2s (1580 modules)
+ ✓ Compiled in 1107ms (687 modules)
+ GET /battle-of-brains/dashboard 200 in 226ms
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /battle-of-brains/dashboard 200 in 455ms
+ GET /api/auth/session 200 in 168ms
+ ✓ Compiled in 1315ms (1575 modules)
+ ✓ Compiled in 2.1s (1589 modules)
+ GET /battle-of-brains/dashboard 200 in 243ms
+ ✓ Compiled in 1573ms (1591 modules)
+ GET /battle-of-brains/dashboard 200 in 108ms
+ ✓ Compiled in 897ms (1454 modules)
+ GET /battle-of-brains/dashboard 200 in 192ms
+ ✓ Compiled in 956ms (1454 modules)
+ GET /battle-of-brains/dashboard 200 in 144ms
+ ✓ Compiled in 1036ms (1454 modules)
+ GET /battle-of-brains/dashboard 200 in 101ms
+ ✓ Compiled in 1279ms (1454 modules)
+ GET /battle-of-brains/dashboard 200 in 119ms
+ ✓ Compiled in 1455ms (1458 modules)
+ GET /battle-of-brains/dashboard 200 in 107ms
+ ✓ Compiled in 1286ms (1458 modules)
+ GET /battle-of-brains/dashboard 200 in 158ms
+ ✓ Compiled in 947ms (1458 modules)
+ GET /battle-of-brains/dashboard 200 in 121ms
+ ✓ Compiled in 941ms (1458 modules)
+ GET /battle-of-brains/dashboard 200 in 197ms
+ ✓ Compiled in 873ms (1458 modules)
+ GET /battle-of-brains/dashboard 200 in 126ms
+ ✓ Compiled in 416ms (686 modules)
+ GET /battle-of-brains/dashboard 200 in 89ms
+ ✓ Compiled in 1141ms (1458 modules)
+ GET /battle-of-brains/dashboard 200 in 124ms
+ HEAD /battle-of-brains 200 in 409ms
+ ○ Compiling /admin/settings ...
+ ✓ Compiled /admin/settings in 2.5s (1470 modules)
+ HEAD /admin/settings 200 in 2983ms
+ ○ Compiling /api/auth/[...nextauth] ...
+ ✓ Compiled /api/auth/[...nextauth] in 1243ms (909 modules)
+ GET /api/auth/session 200 in 1835ms
+ GET /api/auth/session 200 in 48ms
+ GET /battle-of-brains 200 in 149ms
+ GET /battle-of-brains 200 in 378ms
+ GET /api/auth/session 200 in 51ms
+ GET /battle-of-brains/dashboard 200 in 65ms
+ GET /battle-of-brains/dashboard 200 in 39ms
+ GET /api/auth/session 200 in 87ms
+ GET /api/auth/session 200 in 93ms
+ GET /api/auth/session 200 in 96ms
+ ✓ Compiled in 5.3s (1605 modules)
+ GET /battle-of-brains/dashboard 200 in 319ms
+ ✓ Compiled in 1408ms (1605 modules)
+ GET /battle-of-brains/dashboard 200 in 380ms
+ ✓ Compiled in 1545ms (1605 modules)
+ GET /battle-of-brains/dashboard 200 in 187ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 3.7s (1468 modules)
+ ⨯ ReferenceError: CountdownUnit is not defined
+    at BattleOfBrainsDashboardPage (src\app\battle-of-brains\dashboard\page.tsx:364:28)
+  362 |                         </p>
+  363 |                         <div className="mt-2 flex items-end gap-3">
+> 364 |                           <CountdownUnit value={countdown.hours} label="Hours" />
+      |                            ^
+  365 |                           <div className="[font-family:var(--font-bob-display)] text-[1.6rem] text-cyan-300">:</div>
+  366 |                           <CountdownUnit value={countdown.minutes} label="Mins" />
+  367 |                           <div className="[font-family:var(--font-bob-display)] text-[1.6rem] text-cyan-300">:</div> {
+  digest: '106104283'
+}
+ GET /battle-of-brains/dashboard 200 in 3699ms
+ ✓ Compiled /api/auth/[...nextauth] in 499ms (909 modules)
+ GET /api/auth/session 200 in 1101ms
+ ✓ Compiled in 1859ms (1605 modules)
+ HEAD /battle-of-brains/dashboard 200 in 643ms
+ GET /battle-of-brains/dashboard 200 in 202ms
+ GET /api/auth/session 200 in 213ms
+ ✓ Compiled in 1660ms (1605 modules)
+ ✓ Compiled in 1269ms (1605 modules)
+ ⨯ ReferenceError: Cannot access 'submitAnswer' before initialization
+    at BattleOfBrainsDashboardPage (src\app\battle-of-brains\dashboard\page.tsx:151:31)
+  149 |     if (!session || resultOverlay || session.timeLeft > 0) return;
+  150 |     submitAnswer(null, true);
+> 151 |   }, [session, resultOverlay, submitAnswer]);
+      |                               ^
+  152 |
+  153 |   const timerPercent = useMemo(() => {
+  154 |     if (!session) return 100; {
+  digest: '779893919'
+}
+ HEAD /battle-of-brains/dashboard 200 in 783ms
+ GET /battle-of-brains/dashboard 200 in 100ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET /battle-of-brains/dashboard 200 in 131ms
+ ⨯ ReferenceError: Cannot access 'submitAnswer' before initialization
+    at BattleOfBrainsDashboardPage (src\app\battle-of-brains\dashboard\page.tsx:151:31)
+  149 |     if (!session || resultOverlay || session.timeLeft > 0) return;
+  150 |     submitAnswer(null, true);
+> 151 |   }, [session, resultOverlay, submitAnswer]);
+      |                               ^
+  152 |
+  153 |   const timerPercent = useMemo(() => {
+  154 |     if (!session) return 100; {
+  digest: '779893919'
+}
+ GET /battle-of-brains/dashboard 200 in 400ms
+ GET /api/auth/session 200 in 211ms
+ ⨯ ReferenceError: Cannot access 'submitAnswer' before initialization
+    at BattleOfBrainsDashboardPage (src\app\battle-of-brains\dashboard\page.tsx:151:31)
+  149 |     if (!session || resultOverlay || session.timeLeft > 0) return;
+  150 |     submitAnswer(null, true);
+> 151 |   }, [session, resultOverlay, submitAnswer]);
+      |                               ^
+  152 |
+  153 |   const timerPercent = useMemo(() => {
+  154 |     if (!session) return 100; {
+  digest: '779893919'
+}
+ GET /battle-of-brains/dashboard 200 in 137ms
+ GET /api/auth/session 200 in 73ms
+ ⨯ ReferenceError: Cannot access 'submitAnswer' before initialization
+    at BattleOfBrainsDashboardPage (src\app\battle-of-brains\dashboard\page.tsx:151:31)
+  149 |     if (!session || resultOverlay || session.timeLeft > 0) return;
+  150 |     submitAnswer(null, true);
+> 151 |   }, [session, resultOverlay, submitAnswer]);
+      |                               ^
+  152 |
+  153 |   const timerPercent = useMemo(() => {
+  154 |     if (!session) return 100; {
+  digest: '779893919'
+}
+ GET /battle-of-brains/dashboard 200 in 172ms
+ GET /api/auth/session 200 in 80ms
+ GET / 200 in 521ms
+ GET /api/auth/session 200 in 69ms
+ ○ Compiling /api/youtube/channel-content ...
+ ✓ Compiled /api/youtube/channel-content in 1307ms (911 modules)
+ POST /api/youtube/channel-content 200 in 2466ms
+ POST /api/youtube/channel-content 200 in 2614ms
+ POST /api/youtube/channel-content 200 in 125ms
+ POST /api/youtube/channel-content 200 in 115ms
+ POST /api/youtube/channel-content 200 in 2808ms
+ POST /api/youtube/channel-content 200 in 198ms
+ POST /api/youtube/channel-content 200 in 170ms
+ POST /api/youtube/channel-content 200 in 177ms
+ POST /api/youtube/channel-content 200 in 206ms
+ POST /api/youtube/channel-content 200 in 3120ms
+ POST /api/youtube/channel-content 200 in 3454ms
+ GET /battle-of-brains 200 in 463ms
+ POST /api/youtube/channel-content 200 in 3527ms
+ GET /battle-of-brains/dashboard 200 in 71ms
+ HEAD / 200 in 845ms
+ GET / 200 in 293ms
+ GET /api/auth/session 200 in 189ms
+ POST /api/youtube/channel-content 200 in 89ms
+ POST /api/youtube/channel-content 200 in 149ms
+ POST /api/youtube/channel-content 200 in 145ms
+ POST /api/youtube/channel-content 200 in 145ms
+ POST /api/youtube/channel-content 200 in 130ms
+ POST /api/youtube/channel-content 200 in 199ms
+ POST /api/youtube/channel-content 200 in 194ms
+ POST /api/youtube/channel-content 200 in 163ms
+ GET /battle-of-brains 200 in 62ms
+ GET /battle-of-brains/dashboard 200 in 41ms
+ ✓ Compiled in 2s (1607 modules)
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET /battle-of-brains/dashboard 200 in 1224ms
+ HEAD /battle-of-brains/dashboard 200 in 245ms
+ GET /api/auth/session 200 in 193ms
+ GET /battle-of-brains 200 in 96ms
+ GET /battle-of-brains/dashboard 200 in 49ms
+ GET / 200 in 55ms
+ POST /api/youtube/channel-content 200 in 134ms
+ POST /api/youtube/channel-content 200 in 274ms
+ POST /api/youtube/channel-content 200 in 269ms
+ POST /api/youtube/channel-content 200 in 232ms
+ POST /api/youtube/channel-content 200 in 229ms
+ POST /api/youtube/channel-content 200 in 134ms
+ POST /api/youtube/channel-content 200 in 724ms
+ POST /api/youtube/channel-content 200 in 616ms
+ GET /battle-of-brains 200 in 77ms
+ GET / 200 in 360ms
+ GET /api/auth/session 200 in 70ms
+ POST /api/youtube/channel-content 200 in 216ms
+ POST /api/youtube/channel-content 200 in 219ms
+ POST /api/youtube/channel-content 200 in 217ms
+ POST /api/youtube/channel-content 200 in 216ms
+ POST /api/youtube/channel-content 200 in 268ms
+ POST /api/youtube/channel-content 200 in 273ms
+ POST /api/youtube/channel-content 200 in 179ms
+ POST /api/youtube/channel-content 200 in 177ms
+ GET /battle-of-brains 200 in 72ms
+ GET /battle-of-brains/dashboard 200 in 49ms
+ GET / 200 in 55ms
+ POST /api/youtube/channel-content 200 in 77ms
+ POST /api/youtube/channel-content 200 in 177ms
+ POST /api/youtube/channel-content 200 in 170ms
+ POST /api/youtube/channel-content 200 in 170ms
+ POST /api/youtube/channel-content 200 in 155ms
+ POST /api/youtube/channel-content 200 in 157ms
+ POST /api/youtube/channel-content 200 in 157ms
+ POST /api/youtube/channel-content 200 in 102ms
+ GET /battle-of-brains 200 in 69ms
+ GET /api/auth/session 200 in 72ms
+ GET /api/auth/session 200 in 65ms
+ ✓ Compiled in 2.1s (1591 modules)
+ ✓ Compiled in 1267ms (1468 modules)
+ GET /battle-of-brains 200 in 425ms
+ ✓ Compiled in 1902ms (1468 modules)
+ GET /battle-of-brains 200 in 221ms
+ ✓ Compiled in 1308ms (1468 modules)
+ GET /battle-of-brains 200 in 146ms
+ ✓ Compiled in 2.4s (1468 modules)
+ GET /battle-of-brains 200 in 451ms
+ ✓ Compiled in 6.8s (1468 modules)
+ GET /battle-of-brains 200 in 319ms
+ ✓ Compiled in 1264ms (1468 modules)
+ GET /battle-of-brains 200 in 192ms
+ ○ Compiling /api/auth/[...nextauth] ...
+ ✓ Compiled /api/auth/[...nextauth] in 2.2s (909 modules)
+ GET /api/auth/session 200 in 3403ms
+ GET /api/auth/session 200 in 63ms
+ GET /battle-of-brains 200 in 415ms
+ ✓ Compiled in 6.8s (1605 modules)
+ GET /battle-of-brains 200 in 332ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 3.2s (1466 modules)
+ GET /battle-of-brains 200 in 2108ms
+ ○ Compiling /api/auth/[...nextauth] ...
+ ✓ Compiled /api/auth/[...nextauth] in 529ms (908 modules)
+ GET /api/auth/session 200 in 1019ms
+ ✓ Compiled in 1347ms (1603 modules)
+ ✓ Compiled in 1335ms (1603 modules)
+ ✓ Compiled in 1559ms (1599 modules)
+ ✓ Compiled in 1675ms (1605 modules)
+ ✓ Compiled in 1165ms (1605 modules)
+ ✓ Compiled in 1359ms (1605 modules)
+ ✓ Compiled in 1026ms (1468 modules)
+ ✓ Compiled in 1322ms (1468 modules)
+ ✓ Compiled in 1653ms (1468 modules)
+ ✓ Compiled in 2.3s (1468 modules)
+ ✓ Compiled in 3.3s (1466 modules)
+ ✓ Compiled in 1326ms (1468 modules)
+ ✓ Compiled in 1145ms (1468 modules)
+ ✓ Compiled in 1310ms (1468 modules)
+ ✓ Compiled in 1722ms (1468 modules)
+ ✓ Compiled in 1286ms (1468 modules)
+ GET /battle-of-brains 200 in 972ms
+ GET /battle-of-brains/dashboard 200 in 1239ms
+ ○ Compiling /api/auth/[...nextauth] ...
+ ✓ Compiled /api/auth/[...nextauth] in 1934ms (909 modules)
+ GET /api/auth/session 200 in 2885ms
+ GET /battle-of-brains 200 in 3527ms
+ GET /battle-of-brains 200 in 1499ms
+ GET /api/auth/session 200 in 112ms
+ GET /api/auth/session 200 in 501ms
+ GET /battle-of-brains/dashboard 200 in 188ms
+ GET /battle-of-brains/dashboard 200 in 69ms
+ GET /api/auth/session 200 in 84ms
+ GET /api/auth/session 200 in 112ms
+ GET /api/auth/session 200 in 134ms
+ GET /api/auth/session 200 in 94ms
+ GET /api/auth/session 200 in 67ms
+ GET /api/auth/session 200 in 72ms
+ ✓ Compiled in 19.4s (1605 modules)
+ GET /api/auth/session 200 in 8111ms
+ GET /battle-of-brains/dashboard 200 in 893ms
+ GET /api/auth/session 200 in 153ms
+ ✓ Compiled in 3.3s (1605 modules)
+ GET /api/auth/session 200 in 313ms
+ GET /battle-of-brains/dashboard 200 in 1370ms
+ ✓ Compiled in 4.2s (1605 modules)
+ GET /battle-of-brains/dashboard 200 in 188ms
+ ✓ Compiled in 1330ms (1605 modules)
+ GET /battle-of-brains/dashboard 200 in 126ms
+ GET /battle-of-brains/dashboard 200 in 529ms
+ GET /api/auth/session 200 in 127ms
+ GET /battle-of-brains/dashboard 200 in 173ms
+ GET /api/auth/session 200 in 53ms
+ GET /api/auth/session 200 in 93ms
+ GET /battle-of-brains 200 in 111ms
+ ✓ Compiled in 2.2s (1468 modules)
+ GET /battle-of-brains 200 in 400ms
+ GET /battle-of-brains/dashboard 200 in 472ms
+ ✓ Compiled /api/auth/[...nextauth] in 423ms (909 modules)
+ GET /api/auth/session 200 in 993ms
+ GET /battle-of-brains 200 in 447ms
+ GET /api/auth/session 200 in 41ms
+ GET /battle-of-brains/dashboard 200 in 62ms
+ GET /api/auth/session 200 in 49ms
+ GET /api/auth/session 200 in 578ms
+ GET / 200 in 628ms
+ ○ Compiling /api/youtube/channel-content ...
+ ✓ Compiled /api/youtube/channel-content in 11.7s (911 modules)
+ POST /api/youtube/channel-content 200 in 16804ms
+ POST /api/youtube/channel-content 200 in 17107ms
+ POST /api/youtube/channel-content 200 in 381ms
+ POST /api/youtube/channel-content 200 in 17508ms
+ POST /api/youtube/channel-content 200 in 486ms
+ GET /api/auth/session 200 in 539ms
+ POST /api/youtube/channel-content 200 in 18089ms
+ POST /api/youtube/channel-content 200 in 18367ms
+ POST /api/youtube/channel-content 200 in 18442ms
+ GET /battle-of-brains 200 in 712ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 6.9s (1468 modules)
+ ⨯ ReferenceError: getRecentDayLabels is not defined
+    at BattleOfBrainsPage (src\app\battle-of-brains\page.tsx:130:24)
+  128 |   const weeklyPoints = computedStats.weeklyPoints.length ? computedStats.weeklyPoints : [0];
+  129 |   const xpPoints = computedStats.xpPoints.length ? computedStats.xpPoints : [0];
+> 130 |   const weeklyLabels = getRecentDayLabels();
+      |                        ^
+  131 |   const xpLabels = xpPoints.length > 1
+  132 |     ? xpPoints.map((_, index) => `Battle ${index + 1}`)
+  133 |     : ['Start']; {
+  digest: '4134309829'
+}
+ GET /battle-of-brains 200 in 4903ms
+ ○ Compiling /api/auth/[...nextauth] ...
+ ✓ Compiled /api/auth/[...nextauth] in 1965ms (1605 modules)
+ GET /api/auth/session 200 in 2484ms
+ ✓ Compiled in 2.7s (1605 modules)
+ ✓ Compiled in 1784ms (1605 modules)
+ ✓ Compiled in 1037ms (1605 modules)
+ ✓ Compiled in 935ms (1605 modules)
+ GET /battle-of-brains 200 in 593ms
+ GET /battle-of-brains/dashboard 200 in 843ms
+ GET /battle-of-brains 200 in 177ms
+ GET /api/auth/session 200 in 242ms
+ GET /api/auth/session 200 in 160ms
+ GET /battle-of-brains/dashboard 200 in 175ms
+ GET /api/auth/session 200 in 434ms
+ GET /api/auth/session 200 in 560ms
+^C^C

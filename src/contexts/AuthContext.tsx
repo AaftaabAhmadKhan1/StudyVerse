@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { Note, generateId } from '@/data/types';
+import { incrementCompactCount } from '@/lib/subscriptions';
 
 // ---------- YouTube user types ----------
 interface YTSubscription {
@@ -29,6 +30,24 @@ interface Session {
   expires?: string;
 }
 
+interface SavedVideo {
+  id: string;
+  youtubeVideoId: string;
+  title: string;
+  thumbnailUrl: string;
+  channelName?: string;
+  savedAt: string;
+}
+
+interface WatchHistoryItem {
+  id: string;
+  youtubeVideoId: string;
+  title: string;
+  thumbnailUrl: string;
+  channelName?: string;
+  watchedAt: string;
+}
+
 interface AuthContextType {
   // Session (Google OAuth via NextAuth)
   session: Session | null;
@@ -42,13 +61,29 @@ interface AuthContextType {
   ytUserInfo: YTUserInfo | null;
   ytLoading: boolean;
   fetchYTUserInfo: () => Promise<void>;
+  isSubscribedToChannel: (channelId: string) => boolean;
+  subscribeToChannel: (
+    channelId: string
+  ) => Promise<{ ok: boolean; error?: string; requiresAuth?: boolean; alreadySubscribed?: boolean }>;
+  getDisplaySubscriberCount: (channelId: string, baseCount: string) => string;
+
+  // Library
+  savedVideos: SavedVideo[];
+  watchHistory: WatchHistoryItem[];
+  toggleSavedVideo: (video: Omit<SavedVideo, 'savedAt'>) => void;
+  isVideoSaved: (youtubeVideoId: string) => boolean;
+  addWatchHistory: (video: Omit<WatchHistoryItem, 'watchedAt'>) => void;
 
   // Notes (localStorage, tied to user email)
   notes: Note[];
-  addNote: (note: Omit<Note, 'id' | 'createdAt' | 'updatedAt' | 'userId'>) => void;
+  handwrittenImages: Record<string, string>;
+  addNote: (note: Omit<Note, 'createdAt' | 'updatedAt' | 'userId'> & { id?: string }) => void;
   updateNote: (id: string, content: string) => void;
   deleteNote: (id: string) => void;
   getNotesForVideo: (videoId: string) => Note[];
+  saveHandwrittenImage: (noteId: string, dataUrl: string) => void;
+  getHandwrittenForNote: (noteId: string) => string | undefined;
+  deleteHandwrittenImage: (noteId: string) => void;
 
   mounted: boolean;
 }
@@ -59,9 +94,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [status, setStatus] = useState<'loading' | 'authenticated' | 'unauthenticated'>('loading');
   const [notes, setNotes] = useState<Note[]>([]);
+  const [handwrittenImages, setHandwrittenImages] = useState<Record<string, string>>({});
   const [mounted, setMounted] = useState(false);
   const [ytUserInfo, setYTUserInfo] = useState<YTUserInfo | null>(null);
   const [ytLoading, setYTLoading] = useState(false);
+  const [anonId, setAnonId] = useState<string | null>(null);
+  const [subscriptionOverrides, setSubscriptionOverrides] = useState<Record<string, boolean>>({});
+  const [savedVideos, setSavedVideos] = useState<SavedVideo[]>([]);
+  const [watchHistory, setWatchHistory] = useState<WatchHistoryItem[]>([]);
+  const user = session?.user || null;
+  const isAuthenticated = status === 'authenticated' && !!user;
+  const userId = user?.email || anonId || 'anonymous';
 
   // Fetch NextAuth session
   const fetchSession = useCallback(async () => {
@@ -84,12 +127,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setMounted(true);
     fetchSession();
-    // Load notes
+    // Load notes and handwritten images
     try {
       const storedNotes = localStorage.getItem('yt-wallah-notes');
       if (storedNotes) setNotes(JSON.parse(storedNotes));
+      const storedHand = localStorage.getItem('yt-wallah-handwritten');
+      if (storedHand) setHandwrittenImages(JSON.parse(storedHand));
+      const storedSavedVideos = localStorage.getItem('yt-wallah-saved-videos');
+      if (storedSavedVideos) setSavedVideos(JSON.parse(storedSavedVideos));
+      const storedWatchHistory = localStorage.getItem('yt-wallah-watch-history');
+      if (storedWatchHistory) setWatchHistory(JSON.parse(storedWatchHistory));
+      // Ensure we have an anonymous id for local-only notes
+      let storedAnon = localStorage.getItem('yt-wallah-anon-id');
+      if (!storedAnon) {
+        storedAnon = generateId();
+        localStorage.setItem('yt-wallah-anon-id', storedAnon);
+      }
+      setAnonId(storedAnon);
     } catch { /* ignore */ }
   }, [fetchSession]);
+
+  useEffect(() => {
+    if (!mounted || !userId) return;
+
+    try {
+      const stored = localStorage.getItem(`yt-wallah-subscription-overrides:${userId}`);
+      setSubscriptionOverrides(stored ? JSON.parse(stored) : {});
+    } catch {
+      setSubscriptionOverrides({});
+    }
+  }, [mounted, userId]);
 
   // Re-fetch session on window focus
   useEffect(() => {
@@ -101,7 +168,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Persist notes
   useEffect(() => {
     if (mounted) localStorage.setItem('yt-wallah-notes', JSON.stringify(notes));
-  }, [notes, mounted]);
+    if (mounted) localStorage.setItem('yt-wallah-handwritten', JSON.stringify(handwrittenImages));
+    if (mounted) localStorage.setItem('yt-wallah-saved-videos', JSON.stringify(savedVideos));
+    if (mounted) localStorage.setItem('yt-wallah-watch-history', JSON.stringify(watchHistory));
+  }, [notes, handwrittenImages, savedVideos, watchHistory, mounted]);
+
+  useEffect(() => {
+    if (!mounted || !userId) return;
+    localStorage.setItem(
+      `yt-wallah-subscription-overrides:${userId}`,
+      JSON.stringify(subscriptionOverrides)
+    );
+  }, [mounted, subscriptionOverrides, userId]);
 
   // Fetch YouTube user info (subscriptions, channel)
   const fetchYTUserInfo = useCallback(async () => {
@@ -126,13 +204,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [status, session?.accessToken, fetchYTUserInfo]);
 
-  const user = session?.user || null;
-  const isAuthenticated = status === 'authenticated' && !!user;
-  const userId = user?.email || 'anonymous';
-
   const handleSignIn = () => {
-    // Redirect to NextAuth Google sign in
-    window.location.href = '/api/auth/signin/google';
+    window.location.href = '/login';
   };
 
   const handleSignOut = async () => {
@@ -152,14 +225,100 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.location.href = '/';
   };
 
+  const isSubscribedToChannel = useCallback(
+    (channelId: string) => {
+      if (subscriptionOverrides[channelId]) return true;
+      return !!ytUserInfo?.subscriptions.some((subscription) => subscription.channelId === channelId);
+    },
+    [subscriptionOverrides, ytUserInfo]
+  );
+
+  const subscribeToChannel = useCallback(
+    async (channelId: string) => {
+      if (!session?.accessToken) {
+        return { ok: false, requiresAuth: true };
+      }
+
+      if (isSubscribedToChannel(channelId)) {
+        return { ok: true, alreadySubscribed: true };
+      }
+
+      try {
+        const res = await fetch('/api/youtube/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ accessToken: session.accessToken, channelId }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          return {
+            ok: false,
+            error: data?.error || 'Failed to subscribe on YouTube',
+          };
+        }
+
+        if (!data?.alreadySubscribed) {
+          setSubscriptionOverrides((prev) => ({ ...prev, [channelId]: true }));
+        }
+
+        fetchYTUserInfo().catch(() => undefined);
+
+        return {
+          ok: true,
+          alreadySubscribed: !!data?.alreadySubscribed,
+        };
+      } catch (error: unknown) {
+        return {
+          ok: false,
+          error: error instanceof Error ? error.message : 'Failed to subscribe on YouTube',
+        };
+      }
+    },
+    [fetchYTUserInfo, isSubscribedToChannel, session?.accessToken]
+  );
+
+  const getDisplaySubscriberCount = useCallback(
+    (channelId: string, baseCount: string) => {
+      if (!subscriptionOverrides[channelId]) return baseCount;
+      return incrementCompactCount(baseCount);
+    },
+    [subscriptionOverrides]
+  );
+
+  const isVideoSaved = useCallback(
+    (youtubeVideoId: string) => savedVideos.some((video) => video.youtubeVideoId === youtubeVideoId),
+    [savedVideos]
+  );
+
+  const toggleSavedVideo = useCallback((video: Omit<SavedVideo, 'savedAt'>) => {
+    setSavedVideos((prev) => {
+      const existing = prev.find((item) => item.youtubeVideoId === video.youtubeVideoId);
+      if (existing) {
+        return prev.filter((item) => item.youtubeVideoId !== video.youtubeVideoId);
+      }
+      return [{ ...video, savedAt: new Date().toISOString() }, ...prev];
+    });
+  }, []);
+
+  const addWatchHistory = useCallback((video: Omit<WatchHistoryItem, 'watchedAt'>) => {
+    setWatchHistory((prev) => {
+      const next = prev.filter((item) => item.youtubeVideoId !== video.youtubeVideoId);
+      return [{ ...video, watchedAt: new Date().toISOString() }, ...next].slice(0, 100);
+    });
+  }, []);
+
   // Notes CRUD
-  const addNote = (note: Omit<Note, 'id' | 'createdAt' | 'updatedAt' | 'userId'>) => {
-    if (!isAuthenticated) return;
+  const addNote = (note: Omit<Note, 'createdAt' | 'updatedAt' | 'userId'> & { id?: string }) => {
     const newNote: Note = {
-      ...note, id: generateId(), userId,
-      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
-    };
-    setNotes(prev => [...prev, newNote]);
+      ...note,
+      id: note.id || generateId(),
+      userId,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    } as Note;
+    console.debug('addNote:', newNote);
+    setNotes((prev) => [...prev, newNote]);
   };
 
   const updateNote = (id: string, content: string) => {
@@ -170,17 +329,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setNotes(prev => prev.filter(n => n.id !== id));
   };
 
+  const saveHandwrittenImage = (noteId: string, dataUrl: string) => {
+    setHandwrittenImages((prev) => ({ ...prev, [noteId]: dataUrl }));
+  };
+
+  const getHandwrittenForNote = (noteId: string) => handwrittenImages[noteId];
+
+  const deleteHandwrittenImage = (noteId: string) => {
+    setHandwrittenImages((prev) => {
+      const next = { ...prev };
+      delete next[noteId];
+      return next;
+    });
+  };
+
   const getNotesForVideo = (videoId: string): Note[] => {
-    if (!isAuthenticated) return [];
-    return notes.filter(n => n.videoId === videoId && n.userId === userId);
+    return notes.filter((n) => n.videoId === videoId && n.userId === userId);
   };
 
   return (
     <AuthContext.Provider value={{
       session, status, isAuthenticated, user,
       signIn: handleSignIn, signOut: handleSignOut,
-      ytUserInfo, ytLoading, fetchYTUserInfo,
-      notes, addNote, updateNote, deleteNote, getNotesForVideo,
+      ytUserInfo, ytLoading, fetchYTUserInfo, isSubscribedToChannel, subscribeToChannel, getDisplaySubscriberCount,
+      savedVideos, watchHistory, toggleSavedVideo, isVideoSaved, addWatchHistory,
+      notes, handwrittenImages, addNote, updateNote, deleteNote, getNotesForVideo, saveHandwrittenImage, getHandwrittenForNote, deleteHandwrittenImage,
       mounted,
     }}>
       {children}

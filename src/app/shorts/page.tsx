@@ -20,20 +20,26 @@ interface ShortItem {
 }
 
 export default function ShortsPage() {
-  const { videos, channels, siteSettings } = useYTWallah();
+  const { videos, channels, myChannels, siteSettings } = useYTWallah();
   const [allShorts, setAllShorts] = useState<ShortItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showPlayer, setShowPlayer] = useState(false);
   const [playerIndex, setPlayerIndex] = useState(0);
 
-  // Fetch shorts from all channels via YouTube API, falling back to local store
+  // Fetch shorts from added channels via YouTube API, falling back to local store
   const fetchAllShorts = useCallback(async () => {
     setLoading(true);
     const collected: ShortItem[] = [];
+    const activeChannels = myChannels.filter((channel) => channel.isActive);
 
-    if (siteSettings.youtubeApiKey && channels.length > 0) {
-      const fetches = channels
-        .filter((c) => c.isActive)
+    if (activeChannels.length === 0) {
+      setAllShorts([]);
+      setLoading(false);
+      return;
+    }
+
+    if (siteSettings.youtubeApiKey && activeChannels.length > 0) {
+      const fetches = activeChannels
         .map(async (ch) => {
           try {
             const res = await fetch('/api/youtube/channel-content', {
@@ -72,7 +78,10 @@ export default function ShortsPage() {
 
     // Fallback to local store if no API results
     if (collected.length === 0) {
-      const localShorts = videos.filter((v) => v.type === 'short');
+      const allowedChannelIds = new Set(activeChannels.map((channel) => channel.id));
+      const localShorts = videos.filter(
+        (video) => video.type === 'short' && allowedChannelIds.has(video.channelId)
+      );
       for (const s of localShorts) {
         const ch = channels.find((c) => c.id === s.channelId);
         collected.push({
@@ -91,11 +100,19 @@ export default function ShortsPage() {
 
     setAllShorts(collected);
     setLoading(false);
-  }, [channels, siteSettings.youtubeApiKey, videos]);
+  }, [channels, myChannels, siteSettings.youtubeApiKey, videos]);
 
   useEffect(() => {
     fetchAllShorts();
   }, [fetchAllShorts]);
+
+  useEffect(() => {
+    if (myChannels.filter((channel) => channel.isActive).length === 0) {
+      setAllShorts([]);
+      setShowPlayer(false);
+      setLoading(false);
+    }
+  }, [myChannels]);
 
   const handlePlayShort = (index: number) => {
     setPlayerIndex(index);
@@ -118,7 +135,7 @@ export default function ShortsPage() {
                 <Flame className="w-7 h-7 text-orange-400" />
                 <h1 className="text-3xl font-bold text-white">Shorts</h1>
               </div>
-              <p className="text-white/40">Quick bites from YT Wallah channels</p>
+              <p className="text-white/40">Quick bites from PW StudyVerse channels</p>
             </motion.div>
 
             {/* Loading */}

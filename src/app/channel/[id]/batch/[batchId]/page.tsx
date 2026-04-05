@@ -5,20 +5,18 @@ import { motion } from 'framer-motion';
 import Navigation from '@/components/Navigation';
 import FooterNew from '@/components/FooterNew';
 import VideoCard from '@/components/VideoCard';
-import AnnouncementBanner from '@/components/AnnouncementBanner';
 import { useYTWallah } from '@/contexts/YTWallahContext';
 import { BookOpen, ArrowLeft, Filter } from 'lucide-react';
 import Link from 'next/link';
 
 export default function BatchPage({ params }: { params: Promise<{ id: string; batchId: string }> }) {
   const { id, batchId } = use(params);
-  const { batches, videos, channels, announcements } = useYTWallah();
+  const { batches, videos, channels } = useYTWallah();
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
 
   const batch = batches.find(b => b.id === batchId);
   const channel = channels.find(c => c.id === id);
   const batchVideos = videos.filter(v => v.batchId === batchId);
-  const batchAnnouncements = announcements.filter(a => a.isActive && a.type === 'batch' && a.batchId === batchId);
 
   const filteredVideos = selectedSubject === 'all'
     ? batchVideos
@@ -68,13 +66,6 @@ export default function BatchPage({ params }: { params: Promise<{ id: string; ba
               {channel.name} • {batchVideos.length} videos • {batch.subjects.length} subjects
             </p>
           </motion.div>
-
-          {/* Batch Announcements */}
-          {batchAnnouncements.length > 0 && (
-            <div className="mb-8">
-              <AnnouncementBanner announcements={batchAnnouncements} />
-            </div>
-          )}
 
           {/* Subject Filter */}
           {batch.subjects.length > 0 && (

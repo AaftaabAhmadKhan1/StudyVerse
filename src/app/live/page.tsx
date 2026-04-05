@@ -1,15 +1,83 @@
 'use client';
 
+import { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Navigation from '@/components/Navigation';
 import FooterNew from '@/components/FooterNew';
 import VideoCard from '@/components/VideoCard';
 import { useYTWallah } from '@/contexts/YTWallahContext';
-import { Radio } from 'lucide-react';
+import { Loader2, Radio } from 'lucide-react';
+
+interface LiveVideo {
+  id: string;
+  title: string;
+  description: string;
+  thumbnailUrl: string;
+  publishedAt: string;
+  duration: string;
+  durationSec: number;
+  viewCount: string;
+  likeCount: string;
+  type: 'video' | 'short' | 'live';
+  isLive: boolean;
+  isUpcoming: boolean;
+  liveBroadcastContent: string;
+  scheduledStartTime: string;
+  channelName?: string;
+}
 
 export default function LivePage() {
-  const { videos } = useYTWallah();
-  const liveVideos = videos.filter(v => v.isLive || v.type === 'live');
+  const { myChannels, siteSettings } = useYTWallah();
+  const [liveVideos, setLiveVideos] = useState<LiveVideo[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchLiveVideos = useCallback(async () => {
+    const activeChannels = myChannels.filter((channel) => channel.isActive);
+
+    if (!siteSettings.youtubeApiKey || activeChannels.length === 0) {
+      setLiveVideos([]);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    const collected: LiveVideo[] = [];
+
+    await Promise.allSettled(
+      activeChannels.map(async (channel) => {
+        const res = await fetch('/api/youtube/channel-content', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            channelId: channel.youtubeChannelId,
+            apiKey: siteSettings.youtubeApiKey,
+          }),
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          const tag = (items: LiveVideo[]) =>
+            items.map((item) => ({ ...item, channelName: channel.name }));
+          collected.push(...tag(data.liveStreams || []), ...tag(data.upcomingLives || []));
+        }
+      })
+    );
+
+    collected.sort((a, b) => {
+      if (a.isLive && !b.isLive) return -1;
+      if (!a.isLive && b.isLive) return 1;
+      if (a.isUpcoming && !b.isUpcoming) return -1;
+      if (!a.isUpcoming && b.isUpcoming) return 1;
+      return new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
+    });
+
+    setLiveVideos(collected);
+    setLoading(false);
+  }, [myChannels, siteSettings.youtubeApiKey]);
+
+  useEffect(() => {
+    fetchLiveVideos();
+  }, [fetchLiveVideos]);
 
   return (
     <main className="min-h-screen bg-[#030014]">
@@ -35,25 +103,40 @@ export default function LivePage() {
             <p className="text-white/40">Currently streaming lectures and sessions</p>
           </motion.div>
 
-          {/* Live Videos Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {liveVideos.map((video, i) => (
-              <motion.div
-                key={video.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-              >
-                <VideoCard video={video} />
-              </motion.div>
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex items-center justify-center py-24">
+              <Loader2 className="w-7 h-7 text-purple-400 animate-spin" />
+              <span className="text-white/40 ml-3 text-sm">Checking live status...</span>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {liveVideos.map((video, i) => (
+                <motion.div
+                  key={video.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                >
+                  <VideoCard
+                    video={{
+                      ...video,
+                      youtubeVideoId: video.id,
+                      channelId: '',
+                      batchId: '',
+                      subject: '',
+                      createdAt: video.publishedAt,
+                    }}
+                  />
+                </motion.div>
+              ))}
+            </div>
+          )}
 
-          {liveVideos.length === 0 && (
+          {!loading && liveVideos.length === 0 && (
             <div className="text-center py-24">
               <Radio className="w-16 h-16 text-white/10 mx-auto mb-4" />
               <h2 className="text-xl font-bold text-white mb-2">No Live Streams</h2>
-              <p className="text-white/40">There are no live streams at the moment. Check back later!</p>
+              <p className="text-white/40">There are no live streams on your added channels right now.</p>
             </div>
           )}
         </div>

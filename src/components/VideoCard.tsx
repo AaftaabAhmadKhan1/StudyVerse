@@ -2,8 +2,15 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { Play, Clock, Radio, Eye } from 'lucide-react';
+import { Play, Clock } from 'lucide-react';
 import { Video } from '@/data/types';
+
+const videoDateFormatter = new Intl.DateTimeFormat('en-US', {
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
 
 export default function VideoCard({ video }: { video: Video }) {
   const isLive = video.isLive || video.type === 'live';
@@ -73,7 +80,7 @@ export default function VideoCard({ video }: { video: Video }) {
             )}
             <div className="flex items-center gap-1 text-[11px] text-white/30">
               <Clock className="w-3 h-3" />
-              <span>{new Date(video.publishedAt).toLocaleDateString()}</span>
+              <span>{videoDateFormatter.format(new Date(video.publishedAt))}</span>
             </div>
           </div>
         </div>

@@ -27,39 +27,56 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing playlistId or apiKey' }, { status: 400 });
     }
 
-    // Get playlist items (up to 50)
-    const plRes = await fetch(
-      `${YT_API}/playlistItems?playlistId=${playlistId}&part=snippet,contentDetails&maxResults=50&key=${apiKey}`
-    );
-    const plData = await plRes.json();
-    if (!plData.items?.length) return NextResponse.json({ videos: [] });
+    const playlistItems: { contentDetails: { videoId: string } }[] = [];
+    let pageToken = '';
 
-    // Get video details
-    const videoIds = plData.items
-      .map((i: { contentDetails: { videoId: string } }) => i.contentDetails.videoId)
-      .join(',');
-    const vRes = await fetch(
-      `${YT_API}/videos?id=${videoIds}&part=contentDetails,statistics,snippet&key=${apiKey}`
-    );
-    const vData = await vRes.json();
+    for (let page = 0; page < 20; page += 1) {
+      const plRes = await fetch(
+        `${YT_API}/playlistItems?playlistId=${playlistId}&part=snippet,contentDetails&maxResults=50&key=${apiKey}${pageToken ? `&pageToken=${pageToken}` : ''}`
+      );
+      const plData = await plRes.json();
+      if (!plData.items?.length) break;
+      playlistItems.push(...plData.items);
+      pageToken = plData.nextPageToken || '';
+      if (!pageToken) break;
+    }
 
-    const videos = (vData.items || []).map((v: Record<string, Record<string, unknown>>) => {
-      const snippet = v.snippet as Record<string, unknown>;
-      const stats = v.statistics as Record<string, string>;
-      const cd = v.contentDetails as Record<string, string>;
-      const thumbnails = snippet.thumbnails as Record<string, { url: string }>;
+    if (!playlistItems.length) return NextResponse.json({ videos: [] });
 
-      return {
-        id: v.id as unknown as string,
-        title: snippet.title as string,
-        description: ((snippet.description as string) || '').slice(0, 300),
-        thumbnailUrl: thumbnails?.maxres?.url || thumbnails?.high?.url || thumbnails?.medium?.url || '',
-        publishedAt: snippet.publishedAt as string,
-        duration: parseDuration(cd.duration || ''),
-        viewCount: formatCount(stats.viewCount || '0'),
-        likeCount: formatCount(stats.likeCount || '0'),
-      };
-    });
+    const videos: Array<Record<string, unknown>> = [];
+
+    for (let index = 0; index < playlistItems.length; index += 50) {
+      const videoIds = playlistItems
+        .slice(index, index + 50)
+        .map((i: { contentDetails: { videoId: string } }) => i.contentDetails.videoId)
+        .join(',');
+
+      const vRes = await fetch(
+        `${YT_API}/videos?id=${videoIds}&part=contentDetails,statistics,snippet&key=${apiKey}`
+      );
+      const vData = await vRes.json();
+
+      videos.push(
+        ...(vData.items || []).map((v: Record<string, Record<string, unknown>>) => {
+          const snippet = v.snippet as Record<string, unknown>;
+          const stats = v.statistics as Record<string, string>;
+          const cd = v.contentDetails as Record<string, string>;
+          const thumbnails = snippet.thumbnails as Record<string, { url: string }>;
+
+          return {
+            id: v.id as unknown as string,
+            title: snippet.title as string,
+            description: ((snippet.description as string) || '').slice(0, 300),
+            thumbnailUrl:
+              thumbnails?.maxres?.url || thumbnails?.high?.url || thumbnails?.medium?.url || '',
+            publishedAt: snippet.publishedAt as string,
+            duration: parseDuration(cd.duration || ''),
+            viewCount: formatCount(stats.viewCount || '0'),
+            likeCount: formatCount(stats.likeCount || '0'),
+          };
+        })
+      );
+    }
 
     return NextResponse.json({ videos });
   } catch (error: unknown) {

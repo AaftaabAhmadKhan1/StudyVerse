@@ -18,12 +18,12 @@ export default function FooterNew() {
                 <Play className="w-5 h-5 text-white fill-white ml-0.5" />
               </div>
               <h2 className="text-xl font-extrabold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                YT Wallah
+                PW StudyVerse
               </h2>
             </div>
             <p className="text-sm text-white/40 max-w-md leading-relaxed mb-6">
-              Your distraction-free platform for Physics Wallah YouTube content. Access all PW
-              channels, batches, and lectures in one place. Built for focused learning.
+              A focused study companion for official Physics Wallah YouTube content. Browse PW
+              channels, lectures, and batches using YouTube embeds and API-backed organization.
             </p>
             {/* Social Links */}
             <div className="flex items-center gap-3">
@@ -103,6 +103,8 @@ export default function FooterNew() {
                 { name: 'Login', href: '/login' },
                 { name: 'Sign Up', href: '/signup' },
                 { name: 'Admin Panel', href: '/admin/login' },
+                { name: 'Privacy Policy', href: '/privacy' },
+                { name: 'Terms & Compliance', href: '/terms' },
               ].map((link) => (
                 <Link
                   key={link.name}

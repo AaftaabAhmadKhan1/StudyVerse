@@ -7,7 +7,6 @@ import {
   StickyNote,
   ThumbsUp,
   Share2,
-  Bell,
   ChevronDown,
   ChevronUp,
   Maximize2,
@@ -30,9 +29,13 @@ import {
   Gauge,
   PictureInPicture2,
   Check,
+  Bookmark,
 } from 'lucide-react';
 import { Video } from '@/data/types';
 import { useAuth } from '@/contexts/AuthContext';
+import ChannelSubscribeButton from '@/components/ChannelSubscribeButton';
+// handwritten conversion removed
+
 import { useYTWallah } from '@/contexts/YTWallahContext';
 import { loadYouTubeIFrameAPI, formatPlayerTime } from '@/lib/youtubePlayer';
 
@@ -77,8 +80,20 @@ export default function VideoPlayer({ video }: Props) {
   const [showDescription, setShowDescription] = useState(false);
   const [isTheaterMode, setIsTheaterMode] = useState(false);
   const [noteText, setNoteText] = useState('');
+  const [noteTimestamp, setNoteTimestamp] = useState('0:00');
+  const timestampInputRef = useRef<HTMLInputElement | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const { isAuthenticated, addNote, getNotesForVideo, deleteNote } = useAuth();
+  const {
+    isAuthenticated,
+    addNote,
+    getNotesForVideo,
+    deleteNote,
+    getDisplaySubscriberCount,
+    toggleSavedVideo,
+    isVideoSaved,
+  } =
+    useAuth();
   const { channels, batches, siteSettings } = useYTWallah();
 
   // ---- Custom player state ----
@@ -95,10 +110,12 @@ export default function VideoPlayer({ video }: Props) {
   const [playerVolume, setPlayerVolume] = useState(100);
   const [isMuted, setIsMuted] = useState(false);
   const [showControls, setShowControls] = useState(true);
-  // Removed unused variable isFullscreenMode
+  // track fullscreen toggle state
+  const [isFullscreenMode, setIsFullscreenMode] = useState(false);
   const [buffered, setBuffered] = useState(0);
   const [showPlayIndicator, setShowPlayIndicator] = useState<'play' | 'pause' | null>(null);
   const [playerReady, setPlayerReady] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
 
   // ---- Settings menu state ----
   const [showSettings, setShowSettings] = useState(false);
@@ -125,19 +142,42 @@ export default function VideoPlayer({ video }: Props) {
   const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set());
 
   // User reactions (local state — toggling visual only)
-  const [liked, setLiked] = useState(false);
-
-  const channel = channels.find((c) => c.id === video.channelId);
+  const [likedVideos, setLikedVideos] = useState<Record<string, boolean>>({});
   const batch = batches.find((b) => b.id === video.batchId);
   const notes = getNotesForVideo(video.id);
   const isLive = video.isLive || video.type === 'live';
   const ytId = video.youtubeVideoId;
   const apiKey = siteSettings.youtubeApiKey;
+  const channel = channels.find(
+    (c) =>
+      c.id === video.channelId ||
+      c.youtubeChannelId === video.channelId ||
+      (!!ytInfo?.channelId && c.youtubeChannelId === ytInfo.channelId)
+  );
+  const liked = !!likedVideos[ytId || video.id];
+  const saved = isVideoSaved(ytId || video.id);
 
   // Title: prefer fetched, fallback to local
   const title = ytInfo?.title || video.title || 'Loading...';
   const description = ytInfo?.description || video.description || '';
   const channelName = channel?.name || ytInfo?.channelTitle || '';
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('pw-studyverse-video-likes');
+      setLikedVideos(stored ? JSON.parse(stored) : {});
+    } catch {
+      setLikedVideos({});
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('pw-studyverse-video-likes', JSON.stringify(likedVideos));
+    } catch {
+      /* ignore */
+    }
+  }, [likedVideos]);
 
   const liveChatUrl = `https://www.youtube.com/live_chat?v=${ytId}&embed_domain=${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}`;
 
@@ -212,10 +252,53 @@ export default function VideoPlayer({ video }: Props) {
 
   // ---------- Helpers ----------
   const handleAddNote = () => {
-    if (!noteText.trim() || !isAuthenticated) return;
-    addNote({ videoId: video.id, content: noteText.trim(), timestamp: currentTime });
+    if (!noteText.trim()) return;
+    // parse timestamp, fallback to current time
+    const ts = parseTimeToSeconds(noteTimestamp.trim());
+    const timestamp = ts || currentTime;
+    addNote({ videoId: video.id, content: noteText.trim(), timestamp });
     setNoteText('');
+    setToast('Note saved');
+    setTimeout(() => setToast(null), 3000);
   };
+
+  const parseTimeToSeconds = (t: string) => {
+    const parts = t.split(':').map((p) => parseInt(p, 10));
+    if (parts.some(isNaN)) return 0;
+    if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    if (parts.length === 2) return parts[0] * 60 + parts[1];
+    return parts[0] || 0;
+  };
+
+  const handleAutoGenerateNotes = async () => {
+    if (!isAuthenticated) return alert('Please sign in to generate notes');
+    const key = window.prompt('Enter your OpenAI API key (will be used for this request)');
+    if (!key) return;
+    setAiLoading(true);
+    try {
+      const res = await fetch('/api/notes/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoId: ytId, openaiApiKey: key }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Failed to generate notes');
+      if (Array.isArray(data.notes)) {
+        data.notes.forEach((n: any) => {
+          const ts = n.time ? parseTimeToSeconds(n.time) : 0;
+          addNote({ videoId: video.id, content: `__ai_handwritten__\n${n.text}`, timestamp: ts });
+        });
+      }
+      if (data.summary) {
+        addNote({ videoId: video.id, content: `__ai_handwritten__\nSummary: ${data.summary}`, timestamp: 0 });
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      alert(`AI notes failed: ${msg}`);
+    }
+    setAiLoading(false);
+  };
+
 
   const formatTimestamp = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
@@ -226,7 +309,8 @@ export default function VideoPlayer({ video }: Props) {
   };
 
   const toggleLike = () => {
-    setLiked(!liked);
+    const likeKey = ytId || video.id;
+    setLikedVideos((prev) => ({ ...prev, [likeKey]: !prev[likeKey] }));
   };
   const toggleReplies = (id: string) => {
     setExpandedReplies((prev) => {
@@ -249,6 +333,26 @@ export default function VideoPlayer({ video }: Props) {
     }
   };
 
+  const handleToggleSave = useCallback(() => {
+    toggleSavedVideo({
+      id: video.id,
+      youtubeVideoId: ytId || video.id,
+      title: title || 'Untitled Video',
+      thumbnailUrl: video.thumbnailUrl,
+      channelName,
+    });
+    setToast(saved ? 'Removed from saved videos' : 'Saved to Library');
+    setTimeout(() => setToast(null), 3000);
+  }, [channelName, saved, title, toggleSavedVideo, video.id, video.thumbnailUrl, ytId]);
+
+
+  // keep noteTimestamp synced to currentTime unless user is editing
+  useEffect(() => {
+    if (timestampInputRef.current && document.activeElement !== timestampInputRef.current) {
+      setNoteTimestamp(formatTimestamp(currentTime));
+    }
+  }, [currentTime]);
+
   // ===== YouTube IFrame Player initialization =====
   useEffect(() => {
     let player: any = null;
@@ -264,21 +368,21 @@ export default function VideoPlayer({ video }: Props) {
       playerDivRef.current.innerHTML = '';
       playerDivRef.current.appendChild(el);
 
-      player = new (window as any).YT.Player(el, {
-        videoId: ytId,
-        playerVars: {
-          autoplay: 1,
-          controls: 0,
-          modestbranding: 1,
-          rel: 0,
-          showinfo: 0,
-          iv_load_policy: 3,
-          disablekb: 1,
-          fs: 0,
-          playsinline: 1,
-          enablejsapi: 1,
-          cc_load_policy: 0,
-          origin: window.location.origin,
+        player = new (window as any).YT.Player(el, {
+          videoId: ytId,
+          playerVars: {
+            autoplay: 1,
+            controls: 0,
+            modestbranding: 1,
+            rel: 0,
+            showinfo: 0,
+            iv_load_policy: 3,
+            disablekb: 1,
+            fs: 0,
+            playsinline: 1,
+            enablejsapi: 1,
+            cc_load_policy: 0,
+            origin: window.location.origin,
         },
         events: {
           onReady: (e: any) => {
@@ -353,12 +457,14 @@ export default function VideoPlayer({ video }: Props) {
   const seekTo = useCallback((t: number) => {
     ytPlayerRef.current?.seekTo(t, true);
     setProgress(t);
+    setCurrentTime(t);
   }, []);
 
   const seekRelative = useCallback(
     (d: number) => {
       if (!ytPlayerRef.current) return;
-      const t = Math.max(0, Math.min(ytPlayerRef.current.getCurrentTime() + d, duration));
+      const playerDuration = ytPlayerRef.current.getDuration?.() || duration;
+      const t = Math.max(0, Math.min(ytPlayerRef.current.getCurrentTime() + d, playerDuration));
       seekTo(t);
     },
     [duration, seekTo]
@@ -450,10 +556,14 @@ export default function VideoPlayer({ video }: Props) {
       // Removed unused variable mod
       if (captionsEnabled) {
         ytPlayerRef.current.unloadModule?.('captions');
+        ytPlayerRef.current.unloadModule?.('cc');
         setCaptionsEnabled(false);
         setCurrentCaptionLang('');
       } else {
         ytPlayerRef.current.loadModule?.('captions');
+        ytPlayerRef.current.loadModule?.('cc');
+        ytPlayerRef.current.setOption?.('captions', 'reload', true);
+        ytPlayerRef.current.setOption?.('captions', 'track', {});
         setCaptionsEnabled(true);
       }
     } catch {
@@ -467,10 +577,12 @@ export default function VideoPlayer({ video }: Props) {
     (lang: string) => {
       if (!ytPlayerRef.current) return;
       try {
+        ytPlayerRef.current.loadModule?.('captions');
+        ytPlayerRef.current.loadModule?.('cc');
         ytPlayerRef.current.setOption?.('captions', 'track', { languageCode: lang });
+        ytPlayerRef.current.setOption?.('captions', 'reload', true);
         setCurrentCaptionLang(lang);
         if (!captionsEnabled) {
-          ytPlayerRef.current.loadModule?.('captions');
           setCaptionsEnabled(true);
         }
       } catch {
@@ -637,8 +749,11 @@ export default function VideoPlayer({ video }: Props) {
           >
             {/* 16:9 aspect-ratio wrapper */}
             <div className="youtube-container">
-              <div ref={playerDivRef} className="absolute inset-0 w-full h-full" />
-              {/* Transparent overlay — blocks YT watermark hover */}
+              <div
+                ref={playerDivRef}
+                className="youtube-player-crop absolute inset-x-0 -top-3 -bottom-12"
+              />
+              {/* Click layer for custom controls while native YouTube controls stay hidden */}
               <div
                 className="absolute inset-0 z-10 cursor-pointer"
                 onClick={togglePlay}
@@ -666,6 +781,23 @@ export default function VideoPlayer({ video }: Props) {
                     ) : (
                       <Pause className="w-7 h-7 text-white fill-white" />
                     )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Toast for note creation */}
+            <AnimatePresence>
+              {toast && (
+                <motion.div
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.18 }}
+                  className="absolute top-3 right-3 z-50"
+                >
+                  <div className="px-3 py-2 bg-black/70 border border-white/10 text-sm text-white rounded-md backdrop-blur-md">
+                    {toast}
                   </div>
                 </motion.div>
               )}
@@ -780,7 +912,10 @@ export default function VideoPlayer({ video }: Props) {
                         max="100"
                         value={isMuted ? 0 : playerVolume}
                         onChange={(e) => handleVolumeChange(parseInt(e.target.value))}
-                        className="w-20 accent-purple-500 h-1 cursor-pointer"
+                        className="w-20 h-1 cursor-pointer appearance-none rounded-full bg-white/10"
+                        style={{
+                          background: `linear-gradient(90deg, rgb(168 85 247) 0%, rgb(236 72 153) ${isMuted ? 0 : playerVolume}%, rgba(255,255,255,0.18) ${isMuted ? 0 : playerVolume}%, rgba(255,255,255,0.18) 100%)`,
+                        }}
                       />
                     </div>
                   </div>
@@ -1063,20 +1198,32 @@ export default function VideoPlayer({ video }: Props) {
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-white">{channelName}</p>
-                    {channel?.subscriberCount && (
-                      <p className="text-xs text-white/40">{channel.subscriberCount} subscribers</p>
-                    )}
+                    <p className="text-xs text-white/40">
+                      {getDisplaySubscriberCount(
+                        channel?.youtubeChannelId || ytInfo?.channelId || '',
+                        channel?.subscriberCount || '0'
+                      )}{' '}
+                      subscribers
+                    </p>
                   </div>
-                  {channel && (
-                    <a
-                      href={`https://www.youtube.com/channel/${channel.youtubeChannelId}?sub_confirmation=1`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="ml-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-full transition-colors flex items-center gap-1.5"
-                    >
-                      <Bell className="w-3.5 h-3.5" /> Subscribe
-                    </a>
-                  )}
+                    {channel && (
+                      <>
+                        <a
+                          href={`https://www.youtube.com/watch?v=${ytId}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="ml-2 px-4 py-2 bg-white/10 hover:bg-white/15 text-white text-sm font-semibold rounded-full transition-colors flex items-center gap-1.5"
+                        >
+                          <Share2 className="w-3.5 h-3.5" /> Watch on YouTube
+                        </a>
+                        <ChannelSubscribeButton
+                          channelId={channel.youtubeChannelId}
+                          className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-full transition-colors flex items-center gap-1.5 disabled:cursor-default disabled:opacity-100"
+                          subscribedClassName="px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-full transition-colors flex items-center gap-1.5 cursor-default"
+                          iconClassName="w-3.5 h-3.5"
+                        />
+                      </>
+                    )}
                 </div>
               )}
 
@@ -1106,6 +1253,20 @@ export default function VideoPlayer({ video }: Props) {
                 >
                   <Share2 className="w-4 h-4" />
                   Share
+                </motion.button>
+
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleToggleSave}
+                  className={`px-3 py-2 rounded-xl text-sm flex items-center gap-1.5 transition-all border ${
+                    saved
+                      ? 'bg-cyan-500/15 border-cyan-400/30 text-cyan-200'
+                      : 'bg-white/5 hover:bg-white/10 border-white/10 text-white/70 hover:text-white'
+                  }`}
+                >
+                  <Bookmark className={`w-4 h-4 ${saved ? 'fill-cyan-300' : ''}`} />
+                  {saved ? 'Saved' : 'Save'}
                 </motion.button>
               </div>
             </div>
@@ -1206,9 +1367,14 @@ export default function VideoPlayer({ video }: Props) {
               {/* ===== Notes Tab ===== */}
               {activeTab === 'notes' && (
                 <div className="h-full flex flex-col">
-                  {isAuthenticated ? (
-                    <>
+                  <>
+                    {!isAuthenticated && (
+                      <div className="p-3 text-xs text-white/40 border-b border-purple-500/10">
+                        Notes are stored locally in your browser. Sign in to sync across devices.
+                      </div>
+                    )}
                       <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-hide">
+                        
                         {notes.length === 0 ? (
                           <div className="text-center py-12">
                             <StickyNote className="w-12 h-12 text-white/10 mx-auto mb-3" />
@@ -1225,33 +1391,49 @@ export default function VideoPlayer({ video }: Props) {
                                 key={note.id}
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="bg-[#1a1035]/60 border border-purple-500/10 rounded-xl p-3 group"
+                                className="bg-[#1a1035]/60 border border-purple-500/10 rounded-xl p-3 group cursor-pointer"
+                                onClick={() => seekTo(note.timestamp)}
                               >
                                 <div className="flex items-start justify-between gap-2">
                                   <span className="text-xs text-purple-400 font-mono bg-purple-500/10 px-2 py-0.5 rounded-md">
                                     <Clock className="w-3 h-3 inline mr-1" />
                                     {formatTimestamp(note.timestamp)}
                                   </span>
-                                  <button
-                                    onClick={() => deleteNote(note.id)}
-                                    className="text-white/20 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
+                                  <div className="flex items-center gap-2">
+                                                                        <button
+                                      onClick={() => deleteNote(note.id)}
+                                      className="text-white/20 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
                                 </div>
-                                <p className="text-sm text-white/70 leading-relaxed mt-2">
-                                  {note.content}
-                                </p>
-                              </motion.div>
+
+                                {/* show handwritten image if present */}
+                                <p className="text-sm text-white/70 leading-relaxed mt-2">{note.content}</p>                              </motion.div>
                             ))
                         )}
                       </div>
                       <div className="p-4 border-t border-purple-500/10">
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-nowrap">
+                          <input
+                            ref={timestampInputRef}
+                            type="text"
+                            value={noteTimestamp}
+                            onChange={(e) => setNoteTimestamp(e.target.value)}
+                            placeholder="Timestamp (e.g. 1:23)"
+                            className="w-24 bg-[#1a1035] border border-purple-500/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/20 focus:outline-none focus:border-purple-500/30 transition-colors"
+                          />
                           <input
                             type="text"
                             value={noteText}
                             onChange={(e) => setNoteText(e.target.value)}
+                            onFocus={() => {
+                              if (isPlaying) {
+                                ytPlayerRef.current?.pauseVideo?.();
+                                setIsPlaying(false);
+                              }
+                            }}
                             onKeyDown={(e) => e.key === 'Enter' && handleAddNote()}
                             placeholder="Add a note..."
                             className="flex-1 bg-[#1a1035] border border-purple-500/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/20 focus:outline-none focus:border-purple-500/30 transition-colors"
@@ -1260,27 +1442,28 @@ export default function VideoPlayer({ video }: Props) {
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={handleAddNote}
-                            className="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-white text-sm font-medium"
+                            className="flex-shrink-0 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-white text-sm font-medium"
                           >
                             <Plus className="w-4 h-4" />
+                          </motion.button>
+                          <motion.button
+                            whileHover={{ scale: 1.03 }}
+                            whileTap={{ scale: 0.97 }}
+                            onClick={handleAutoGenerateNotes}
+                            disabled={aiLoading}
+                            className={`px-3 py-2 rounded-xl text-sm font-medium border border-white/10 ml-2 flex items-center gap-2 ${
+                              aiLoading ? 'bg-white/5 text-white/50' : 'text-white/70 hover:text-white/90'
+                            }`}
+                          >
+                            {aiLoading ? (
+                              <Loader2 className="w-4 h-4 animate-spin text-purple-400" />
+                            ) : (
+                              'Auto Notes (AI)'
+                            )}
                           </motion.button>
                         </div>
                       </div>
                     </>
-                  ) : (
-                    <div className="flex items-center justify-center h-full">
-                      <div className="text-center">
-                        <StickyNote className="w-12 h-12 text-white/10 mx-auto mb-3" />
-                        <p className="text-white/40 text-sm">Sign in to take notes</p>
-                        <a
-                          href="/login"
-                          className="text-purple-400 text-sm font-medium hover:text-purple-300 mt-2 inline-block"
-                        >
-                          Sign In →
-                        </a>
-                      </div>
-                    </div>
-                  )}
                 </div>
               )}
 

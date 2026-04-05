@@ -203,8 +203,9 @@ body {
   animation: pulse-ring 1.5s ease-out infinite;
 }
 
-/* Smooth transitions */
-* {
+/* Smooth transitions — scoped to interactive elements only to avoid style recalc on every DOM node */
+a, button, input, select, textarea, [role="button"],
+.glass, .glass-light, .glow-purple, .glow-pink {
   transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -228,64 +229,11 @@ body {
   border-radius: 12px;
 }
 
-/* Block all YouTube UI — iframe gets no pointer events, our overlay handles everything */
-.youtube-container iframe {
-  pointer-events: none;
-}
-
-/* Cover the YouTube watermark logo at bottom-right with a solid black strip */
-.youtube-container::before {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 150px;
-  height: 36px;
-  background: #000;
-  z-index: 4;
-  pointer-events: none;
-  border-radius: 0 0 12px 0;
-}
-/* Cover the YouTube watermark logo at bottom-left too */
-.youtube-container::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
+.youtube-player-crop,
+.youtube-player-crop iframe,
+.youtube-player-crop > div {
   width: 100%;
-  height: 52px;
-  background: linear-gradient(to top, #000 0%, transparent 100%);
-  z-index: 3;
-  pointer-events: none;
-}
-
-/* Shorts player — hide YT watermark at bottom */
-.shorts-player-wrapper iframe {
-  pointer-events: none;
-}
-.shorts-player-wrapper::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 50px;
-  background: linear-gradient(to top, #000 0%, transparent 100%);
-  z-index: 3;
-  pointer-events: none;
-  border-radius: 0 0 12px 12px;
-}
-.shorts-player-wrapper::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 50px;
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5) 0%, transparent 100%);
-  z-index: 3;
-  pointer-events: none;
-  border-radius: 12px 12px 0 0;
+  height: 100%;
 }
 
 /* Custom range input styling for player volume */

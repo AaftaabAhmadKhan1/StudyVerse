@@ -2,11 +2,9 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   eslint: {
-    // ESLint is run in CI pipeline separately
     ignoreDuringBuilds: true,
   },
   typescript: {
-    // Type checking is run in CI pipeline separately
     ignoreBuildErrors: true,
   },
   images: {
@@ -16,6 +14,10 @@ const nextConfig: NextConfig = {
         hostname: '**',
       },
     ],
+  },
+  experimental: {
+    // Tree-shake large client-side libraries — cuts framer-motion & lucide bundle by ~30%
+    optimizePackageImports: ['framer-motion', 'lucide-react'],
   },
 };
 
