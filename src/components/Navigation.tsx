@@ -19,6 +19,7 @@ import {
   BookOpen,
   Sparkles,
   Brain,
+  Wand2,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useYTWallah } from '@/contexts/YTWallahContext';
@@ -52,6 +53,7 @@ export default function Navigation() {
     { name: 'Shorts', href: '/shorts', icon: Flame },
     { name: 'Live', href: '/live', icon: Radio },
     { name: 'Library', href: '/library', icon: BookOpen },
+    { name: 'StoryTutor', href: '/story-tutor', icon: Wand2 },
     { name: "What's Next ?", href: '/whats-next', icon: Sparkles },
     { name: 'Battle Of Brains', href: '/battle-of-brains', icon: Brain },
     { name: 'Announcements', href: '/announcements', icon: Megaphone },
