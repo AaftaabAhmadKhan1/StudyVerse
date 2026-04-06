@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Play, Youtube, Send, Instagram, Twitter, Heart } from 'lucide-react';
+import { Play, Youtube, Send, Instagram, Twitter } from 'lucide-react';
 import { useYTWallah } from '@/contexts/YTWallahContext';
 
 export default function FooterNew() {
@@ -121,9 +121,6 @@ export default function FooterNew() {
         {/* Bottom */}
         <div className="mt-10 pt-6 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs text-white/20">{siteSettings.footerText}</p>
-          <p className="text-xs text-white/20 flex items-center gap-1">
-            Made with <Heart className="w-3 h-3 text-red-400 fill-red-400" /> for students
-          </p>
         </div>
       </div>
     </footer>

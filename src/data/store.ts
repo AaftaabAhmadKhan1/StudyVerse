@@ -12,7 +12,7 @@ export const defaultSiteSettings: SiteSettings = {
   logoUrl: '',
   primaryColor: '#7c3aed',
   accentColor: '#ec4899',
-  footerText: '© 2026 PW StudyVerse. Uses YouTube embeds and YouTube API Services in a compliance-first study workflow.',
+  footerText: '© 2026 PW StudyVerse.',
   socialLinks: {
     youtube: 'https://youtube.com/@PhysicsWallah',
     telegram: 'https://t.me/physicswallah',
