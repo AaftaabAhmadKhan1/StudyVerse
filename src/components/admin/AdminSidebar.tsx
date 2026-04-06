@@ -5,21 +5,20 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Shield, LayoutDashboard, Tv, BookOpen, Video, Megaphone, Settings,
-  LogOut, Menu, X, Play, ChevronRight
+  Shield, LayoutDashboard, Tv, Megaphone, Settings,
+  LogOut, Menu, X, Play, ChevronRight, FileText
 } from 'lucide-react';
 import { useYTWallah } from '@/contexts/YTWallahContext';
 
 export default function AdminSidebar() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const pathname = usePathname();
-  const { adminLogout, channels, batches, videos, announcements } = useYTWallah();
+  const { adminLogout, channels, announcements } = useYTWallah();
 
   const navItems = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard, count: undefined },
     { name: 'Channels', href: '/admin/channels', icon: Tv, count: channels.length },
-    { name: 'Batches', href: '/admin/batches', icon: BookOpen, count: batches.length },
-    { name: 'Videos', href: '/admin/videos', icon: Video, count: videos.length },
+    { name: 'Study Notes', href: '/admin/study-notes', icon: FileText, count: undefined },
     { name: 'Announcements', href: '/admin/announcements', icon: Megaphone, count: announcements.length },
     { name: 'Settings', href: '/admin/settings', icon: Settings, count: undefined },
   ];

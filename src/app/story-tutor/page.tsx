@@ -180,23 +180,22 @@ export default function StoryTutor() {
                 {storyData.title}
               </h2>
 
-              {storyData.videoUrl && (
-                <div className="mb-8 rounded-2xl overflow-hidden shadow-lg border-4 border-blue-50 dark:border-blue-900/20 relative group">
-                  <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md text-white px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 z-10">
-                    <Sparkles size={16} className="text-yellow-400" /> Auto-Generated Animation
-                  </div>
-                  <video 
-                    className="w-full aspect-video object-cover" 
-                    controls 
-                    autoPlay 
-                    muted 
-                    loop
-                    src={storyData.videoUrl}
-                  >
-                    Your browser does not support the video tag.
-                  </video>
+              <div className="mb-8 rounded-2xl overflow-hidden shadow-lg border-4 border-blue-50 dark:border-blue-900/20 relative group">
+                <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md text-white px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 z-10">
+                  <Sparkles size={16} className="text-yellow-400" /> Auto-Generated Animation
                 </div>
-              )}
+                <video 
+                  key={storyData.videoUrl || "demo-video"}
+                  className="w-full aspect-video object-cover bg-gray-900" 
+                  controls 
+                  autoPlay 
+                  playsInline
+                  loop
+                  src={storyData.videoUrl || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"}
+                >
+                  Your browser does not support the video tag.
+                </video>
+              </div>
               
               <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl mb-6">
                 <p className="font-medium text-blue-800 dark:text-blue-300 text-sm">

@@ -5,12 +5,12 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { useYTWallah } from '@/contexts/YTWallahContext';
-import { Tv, BookOpen, Video, Megaphone, TrendingUp, Zap } from 'lucide-react';
+import { Tv, Megaphone, TrendingUp, Zap, FileText } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const { isAdminAuthenticated, channels, batches, videos, announcements, mounted } = useYTWallah();
+  const { isAdminAuthenticated, channels, announcements, mounted } = useYTWallah();
 
   useEffect(() => {
     if (mounted && !isAdminAuthenticated) {
@@ -35,13 +35,12 @@ export default function AdminDashboard() {
       href: '/admin/channels',
     },
     {
-      label: 'Batches',
-      value: batches.length,
-      icon: BookOpen,
-      color: 'pink',
-      href: '/admin/batches',
+      label: 'Study Notes',
+      value: 'Manage',
+      icon: FileText,
+      color: 'blue',
+      href: '/admin/study-notes',
     },
-    { label: 'Videos', value: videos.length, icon: Video, color: 'blue', href: '/admin/videos' },
     {
       label: 'Announcements',
       value: announcements.length,
@@ -58,9 +57,6 @@ export default function AdminDashboard() {
     orange: 'from-orange-600/20 to-orange-600/5 border-orange-500/20 text-orange-400',
   };
 
-  const recentVideos = [...videos]
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 5);
   const activeChannels = channels.filter((c) => c.isActive);
 
   return (
@@ -111,8 +107,7 @@ export default function AdminDashboard() {
               <div className="grid grid-cols-2 gap-3">
                 {[
                   { label: 'Add Channel', href: '/admin/channels', icon: Tv },
-                  { label: 'Add Batch', href: '/admin/batches', icon: BookOpen },
-                  { label: 'Add Video', href: '/admin/videos', icon: Video },
+                  { label: 'Study Notes', href: '/admin/study-notes', icon: FileText },
                   { label: 'New Announcement', href: '/admin/announcements', icon: Megaphone },
                 ].map((action) => (
                   <Link key={action.label} href={action.href}>
@@ -136,35 +131,29 @@ export default function AdminDashboard() {
               className="bg-[#0f0a1f]/60 border border-purple-500/10 rounded-2xl p-6"
             >
               <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-green-400" /> Recent Videos
+                <Megaphone className="w-5 h-5 text-green-400" /> Recent Announcements
               </h2>
               <div className="space-y-3">
-                {recentVideos.length > 0 ? (
-                  recentVideos.map((video) => (
+                {announcements.length > 0 ? (
+                  [...announcements]
+                    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                    .slice(0, 5)
+                    .map((announcement) => (
                     <div
-                      key={video.id}
-                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-all"
+                      key={announcement.id}
+                      className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-all border border-white/5"
                     >
-                      <div className="w-16 h-10 rounded-lg bg-[#1a1035] overflow-hidden flex-shrink-0">
-                        <img
-                          src={
-                            video.thumbnailUrl ||
-                            `https://img.youtube.com/vi/${video.youtubeVideoId}/default.jpg`
-                          }
-                          alt=""
-                          className="w-full h-full object-cover"
-                        />
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500/20 to-blue-500/20 flex items-center justify-center flex-shrink-0 text-white font-bold">
+                        <Megaphone className="w-4 h-4 text-green-400" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-white/80 font-medium truncate">{video.title}</p>
-                        <p className="text-[11px] text-white/30">
-                          {video.subject} &bull; {video.type}
-                        </p>
+                        <p className="text-sm font-medium text-white truncate">{announcement.title}</p>
+                        <p className="text-[11px] text-white/40 truncate">{announcement.message}</p>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-white/30 text-center py-8">No videos yet</p>
+                  <p className="text-sm text-white/30 text-center py-8">No announcements yet</p>
                 )}
               </div>
             </motion.div>
@@ -181,15 +170,14 @@ export default function AdminDashboard() {
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {activeChannels.map((channel) => (
-                <div key={channel.id} className="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
+                <div key={channel.id} className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0 text-white font-bold text-sm">
                     {channel.name.charAt(0)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-white truncate">{channel.name}</p>
                     <p className="text-[11px] text-white/30">
-                      {channel.subscriberCount} &bull;{' '}
-                      {videos.filter((v) => v.channelId === channel.id).length} videos
+                      {channel.subscriberCount || '0'} subscribers
                     </p>
                   </div>
                 </div>

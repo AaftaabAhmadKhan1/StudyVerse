@@ -92,6 +92,7 @@ export default function VideoPlayer({ video }: Props) {
     getDisplaySubscriberCount,
     toggleSavedVideo,
     isVideoSaved,
+    addWatchHistory,
   } =
     useAuth();
   const { channels, batches, siteSettings } = useYTWallah();
@@ -203,6 +204,15 @@ export default function VideoPlayer({ video }: Props) {
           likeCount: data.likeCount,
           commentCount: data.commentCount,
           tags: data.tags,
+        });
+
+        // Also update watch history with correct fetched title
+        addWatchHistory({
+          id: video.id,
+          youtubeVideoId: ytId || video.id,
+          title: data.title,
+          thumbnailUrl: video.thumbnailUrl,
+          channelName: data.channelTitle,
         });
       }
     } catch {

@@ -188,7 +188,7 @@ export default function LibraryPage() {
                 ) : (
                   <EmptyState
                     title="No study notes uploaded yet"
-                    copy="Admin-uploaded board and class wise notes will show here."
+                    copy=""
                     icon={<Files className="h-10 w-10 text-white/15" />}
                   />
                 )}
