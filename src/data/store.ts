@@ -28,32 +28,7 @@ export const defaultSiteSettings: SiteSettings = {
 };
 
 // Sample Channels
-export const defaultChannels: Channel[] = [
-  {
-    id: 'ch-001',
-    name: 'Physics Wallah',
-    youtubeChannelId: 'UCiGyWN6DEbnj2alu7iapuKQ',
-    description: 'The main Physics Wallah channel with complete lectures for JEE & NEET preparation.',
-    thumbnailUrl: 'https://yt3.googleusercontent.com/ytc/AIdro_nM5NRWU9rPJ0JRO4L6ixGWQDwXhDBdJNOQmTOVYkfnMA=s176-c-k-c0x00ffffff-no-rj',
-    bannerUrl: 'https://yt3.googleusercontent.com/ytc/AIdro_nM5NRWU9rPJ0JRO4L6ixGWQDwXhDBdJNOQmTOVYkfnMA=s176-c-k-c0x00ffffff-no-rj',
-    subscriberCount: '25M+',
-    videoCount: '5000+',
-    isActive: true,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'ch-002',
-    name: 'PW Foundation',
-    youtubeChannelId: 'UCA2DIfbuZVsMWrRtgG9N4mw',
-    description: 'Foundation courses for Class 9-10 students covering all subjects.',
-    thumbnailUrl: 'https://yt3.googleusercontent.com/ytc/AIdro_nM5NRWU9rPJ0JRO4L6ixGWQDwXhDBdJNOQmTOVYkfnMA=s176-c-k-c0x00ffffff-no-rj',
-    bannerUrl: '',
-    subscriberCount: '5M+',
-    videoCount: '2000+',
-    isActive: true,
-    createdAt: new Date().toISOString(),
-  },
-];
+export const defaultChannels: Channel[] = [];
 
 // Sample Batches
 export const defaultBatches: Batch[] = [
