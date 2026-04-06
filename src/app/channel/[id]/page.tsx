@@ -13,9 +13,10 @@ import {
   Loader2, ChevronRight, MessageSquare,
   Heart, Share2, Bookmark,
   Sparkles, ImageIcon, BarChart3,
-  CheckCircle2, CircleDot, X, ChevronLeft,
+  CheckCircle2, CircleDot, X, ChevronLeft, Search,
 } from 'lucide-react';
 import Link from 'next/link';
+import VideoSearch from '@/components/VideoSearch';
 
 // ---------- Types for fetched YT data ----------
 interface YTVideo {
@@ -345,23 +346,32 @@ export default function ChannelPage({ params }: { params: Promise<{ id: string }
             </div>
           </div>
 
-          {/* Tabs */}
-          <div className="flex items-center gap-1 border-b border-white/5 mb-6 overflow-x-auto scrollbar-hide">
-            {TABS.map(tab => {
-              const Icon = tab.icon;
-              const isAct = activeTab === tab.key;
-              return (
-                <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-                  className={`relative px-4 py-3 text-sm font-medium flex items-center gap-2 transition-colors whitespace-nowrap ${isAct ? 'text-white' : 'text-white/40 hover:text-white/60'}`}>
-                  <Icon className="w-4 h-4" />
-                  {tab.label}
-                  {isAct && (
-                    <motion.div layoutId="channel-tab-indicator"
-                      className="absolute bottom-0 left-2 right-2 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full" />
-                  )}
-                </button>
-              );
-            })}
+          {/* Tabs & Search */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-white/5 mb-6 gap-4">
+            <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide shrink-0 w-full md:w-auto">
+              {TABS.map(tab => {
+                const Icon = tab.icon;
+                const isAct = activeTab === tab.key;
+                return (
+                  <button key={tab.key} onClick={() => setActiveTab(tab.key)}
+                    className={`relative px-4 py-3 text-sm font-medium flex items-center gap-2 transition-colors whitespace-nowrap ${isAct ? 'text-white' : 'text-white/40 hover:text-white/60'}`}>
+                    <Icon className="w-4 h-4" />
+                    {tab.label}
+                    {isAct && (
+                      <motion.div layoutId="channel-tab-indicator"
+                        className="absolute bottom-0 left-2 right-2 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            
+            <div className="pb-3 md:pb-0 w-full md:max-w-xs xl:max-w-sm shrink-0 relative z-50">
+              <VideoSearch 
+                channelId={channel.youtubeChannelId} 
+                placeholder={`Search in ${channel.name}...`} 
+              />
+            </div>
           </div>
 
           {/* Content */}

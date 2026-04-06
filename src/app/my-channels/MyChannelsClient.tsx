@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Trash2, Tv } from 'lucide-react';
 import { useYTWallah } from '@/contexts/YTWallahContext';
 import ChannelCard from '@/components/ChannelCard';
+import VideoSearch from '@/components/VideoSearch';
 
 export default function MyChannelsClient() {
   const { myChannels, removeChannelFromMyChannels } = useYTWallah();
@@ -13,21 +14,31 @@ export default function MyChannelsClient() {
   return (
     <div className="min-h-screen bg-[#030014]">
       <div className="mx-auto max-w-7xl px-6 py-12">
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
-        >
-          <div className="mb-2 flex items-center gap-3">
-            <Tv className="h-7 w-7 text-purple-400" />
-            <h1 className="text-3xl font-bold text-white">My Channels</h1>
-          </div>
-          <p className="text-white/40">
-            Channels you add from the Channels page will appear here.
-          </p>
-        </motion.div>
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <div className="mb-2 flex items-center gap-3">
+              <Tv className="h-7 w-7 text-purple-400" />
+              <h1 className="text-3xl font-bold text-white">My Channels</h1>
+            </div>
+            <p className="text-white/40">
+              Channels you add from the Channels page will appear here.
+            </p>
+          </motion.div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="w-full md:w-96 shrink-0 relative z-50"
+          >
+            <VideoSearch placeholder="Search any YouTube video..." />
+          </motion.div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 relative z-10">
           {activeChannels.map((channel, i) => (
             <motion.div
               key={channel.id}
