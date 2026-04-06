@@ -401,7 +401,6 @@ export default function Home() {
             </div>
             <div className="flex items-center justify-center py-16">
               <Loader2 className="w-6 h-6 text-purple-400 animate-spin" />
-              <span className="text-white/30 ml-3 text-sm">Loading from YouTube...</span>
             </div>
           </section>
         ) : latestVideos.length > 0 ? (

@@ -378,7 +378,6 @@ export default function ChannelPage({ params }: { params: Promise<{ id: string }
           {loading ? (
             <div className="flex items-center justify-center py-32">
               <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
-              <span className="text-white/40 ml-3 text-sm">Loading from YouTube...</span>
             </div>
           ) : error ? (
             <div className="text-center py-20">
