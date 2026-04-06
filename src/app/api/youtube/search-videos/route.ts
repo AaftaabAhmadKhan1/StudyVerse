@@ -5,7 +5,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const q = searchParams.get('q')?.trim();
     const channelId = searchParams.get('channelId')?.trim();
-    const apiKey = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || '';
+    const apiKey = process.env.YOUTUBE_API_KEY || 'AIzaSyBsGZNsD-W2Wsc_YTUng-H8-hEJ6Nr9uVg';
 
     if (!q && !channelId) {
       return NextResponse.json({ error: 'Missing query parameter' }, { status: 400 });
