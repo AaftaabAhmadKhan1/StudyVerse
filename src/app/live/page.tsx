@@ -58,7 +58,9 @@ export default function LivePage() {
         if (res.ok) {
           const tag = (items: LiveVideo[]) =>
             items.map((item) => ({ ...item, channelName: channel.name }));
-          collected.push(...tag(data.liveStreams || []), ...tag(data.upcomingLives || []));
+          
+          const activeLive = (data.liveStreams || []).filter((v: LiveVideo) => v.isLive);
+          collected.push(...tag(activeLive), ...tag(data.upcomingLives || []));
         }
       })
     );
