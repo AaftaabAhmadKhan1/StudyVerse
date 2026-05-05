@@ -22,8 +22,7 @@ export default function FooterNew() {
               </h2>
             </div>
             <p className="text-sm text-white/40 max-w-md leading-relaxed mb-6">
-              A focused study companion for official Physics Wallah YouTube content. Browse PW
-              channels, lectures, and batches using YouTube embeds and API-backed organization.
+              A focused study companion for official Physics Wallah YouTube content.
             </p>
             {/* Social Links */}
             <div className="flex items-center gap-3">
