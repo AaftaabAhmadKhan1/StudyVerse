@@ -21,7 +21,6 @@ interface StoryData {
 
 export default function StoryTutor() {
   const [topic, setTopic] = useState("");
-  const [theme, setTheme] = useState("");
   const [ageGroup, setAgeGroup] = useState("8-10");
   const [isLoading, setIsLoading] = useState(false);
   const [storyData, setStoryData] = useState<StoryData | null>(null);
@@ -34,7 +33,7 @@ export default function StoryTutor() {
 
   const generateStory = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!topic || !theme) return;
+    if (!topic) return;
 
     setIsLoading(true);
     setError("");
@@ -48,7 +47,7 @@ export default function StoryTutor() {
       const res = await fetch("/api/story-tutor/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic, theme, ageGroup }),
+        body: JSON.stringify({ topic, ageGroup }),
       });
 
       const data = await res.json();
@@ -116,26 +115,6 @@ export default function StoryTutor() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Pick a Fun Theme!
-                </label>
-                <select 
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-blue-500"
-                  value={theme}
-                  onChange={(e) => setTheme(e.target.value)}
-                  required
-                >
-                  <option value="" disabled>Select a theme...</option>
-                  <option value="Space Explorers">🚀 Space Explorers</option>
-                  <option value="Dinosaur Adventure">🦖 Dinosaur Adventure</option>
-                  <option value="Magic Academy">🧙‍♂️ Magic Academy</option>
-                  <option value="Superhero City">🦸‍♀️ Superhero City</option>
-                  <option value="Underwater Kingdom">🧜‍♀️ Underwater Kingdom</option>
-                  <option value="Pirate Treasure Hunt">🏴‍☠️ Pirate Treasure Hunt</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Age Group
                 </label>
                 <select 
@@ -159,7 +138,7 @@ export default function StoryTutor() {
               <button
                 type="submit"
                 className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
-                disabled={!topic || !theme}
+                disabled={!topic}
               >
                 <Sparkles size={20} /> Generate Magic Story
               </button>
@@ -180,21 +159,33 @@ export default function StoryTutor() {
                 {storyData.title}
               </h2>
 
-              <div className="mb-8 rounded-2xl overflow-hidden shadow-lg border-4 border-blue-50 dark:border-blue-900/20 relative group">
-                <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md text-white px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 z-10">
+              <div className="mb-8 rounded-2xl overflow-hidden shadow-lg border-4 border-blue-50 dark:border-blue-900/20 relative group bg-gray-900 w-full aspect-video">
+                <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md text-white px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 z-10 pointer-events-none">
                   <Sparkles size={16} className="text-yellow-400" /> Auto-Generated Animation
                 </div>
-                <video 
-                  key={storyData.videoUrl || "demo-video"}
-                  className="w-full aspect-video object-cover bg-gray-900" 
-                  controls 
-                  autoPlay 
-                  playsInline
-                  loop
-                  src={storyData.videoUrl || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"}
-                >
-                  Your browser does not support the video tag.
-                </video>
+                {storyData.videoUrl && storyData.videoUrl.includes('youtube.com') ? (
+                  <iframe 
+                    key={storyData.videoUrl}
+                    className="w-full h-full object-cover" 
+                    src={`${storyData.videoUrl}?autoplay=1&mute=0`}
+                    title={storyData.title}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  ></iframe>
+                ) : (
+                  <video 
+                    key={storyData.videoUrl || "demo-video"}
+                    className="w-full h-full object-cover bg-gray-900" 
+                    controls 
+                    autoPlay 
+                    playsInline
+                    loop
+                    src={storyData.videoUrl || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"}
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+                )}
               </div>
               
               <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl mb-6">

@@ -81,7 +81,7 @@ require('dotenv').config();
     const videoSelectors = [
       'ytd-video-renderer a#thumbnail',
       'ytd-grid-video-renderer a#thumbnail',
-      '#video-title',
+      '#video-title',                          
       'ytd-item-section-renderer ytd-video-renderer a',
     ];
 

@@ -10,23 +10,37 @@ export const runtime = 'edge';
 
 export async function POST(req: Request) {
   try {
-    const { topic, theme, ageGroup } = await req.json();
+    const { topic, ageGroup } = await req.json();
 
-    if (!topic || !theme) {
+    if (!topic) {
       return NextResponse.json(
-        { error: 'Topic and theme are required' },
+        { error: 'Topic is required' },
         { status: 400 }
       );
     }
 
     if (!process.env.OPENAI_API_KEY) {
       // Fallback data if no API key is provided
+      let fallbackVideoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+      try {
+        const youtubeKey = process.env.YOUTUBE_API_KEY || 'AIzaSyBsGZNsD-W2Wsc_YTUng-H8-hEJ6Nr9uVg';
+        const searchQuery = `${topic} educational animation for kids`;
+        const ytUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=1&q=${encodeURIComponent(searchQuery)}&key=${youtubeKey}`;
+        const ytResp = await fetch(ytUrl);
+        const ytData = await ytResp.json();
+        if (ytData.items && ytData.items.length > 0) {
+          fallbackVideoUrl = `https://www.youtube.com/embed/${ytData.items[0].id.videoId}`;
+        }
+      } catch (e) {
+        console.error('Failed to fetch YouTube video for fallback:', e);
+      }
+
       const fallbackData = {
         title: `The Magical Adventure of ${topic}`,
-        videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-        conceptSummary: `Here is a fun summary of ${topic} through the lens of a ${theme} adventure!`,
+        videoUrl: fallbackVideoUrl,
+        conceptSummary: `Here is a fun summary of ${topic}!`,
         story: [
-          `Once upon a time in a world full of ${theme}, there was an amazing discovery about ${topic}.`,
+          `Once upon a time, there was an amazing discovery about ${topic}.`,
           `The brave heroes of our story needed to understand how ${topic} worked in order to save the day! They experimented, learned, and found out that it's all about how elements interact in fascinating ways.`,
           `Through teamwork and clever thinking, they completely mastered the concept of ${topic} and lived happily ever after, always eager to learn more!`
         ],
@@ -58,11 +72,10 @@ export async function POST(req: Request) {
     const prompt = `
       You are an expert children's educator and storyteller.
       Topic to teach: ${topic}
-      Theme of the story: ${theme}
       Target Age Group: ${ageGroup || '8-10'} years old.
 
-      Write a highly engaging, fun, and educational story that explains the concept of "${topic}" using the theme of "${theme}". 
-      The story should be easy to understand for the target age group, using analogies that fit the theme.
+      Write a highly engaging, fun, and educational story that explains the concept of "${topic}". 
+      The story should be easy to understand for the target age group, using analogies that make learning fun.
       
       After the story, provide 3 multiple-choice questions to test their understanding of the concept based on the story.
 
@@ -106,8 +119,25 @@ export async function POST(req: Request) {
 
     const parsedContent = JSON.parse(content);
     
-    // Add the demo animation video to the real AI response as well
-    parsedContent.videoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+    // Fetch an animated YouTube video matching the topic and theme
+    let videoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+    try {
+      const youtubeKey = process.env.YOUTUBE_API_KEY || 'AIzaSyBsGZNsD-W2Wsc_YTUng-H8-hEJ6Nr9uVg';
+      const searchQuery = `${topic} educational animation for kids`;
+      const ytUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=1&q=${encodeURIComponent(searchQuery)}&key=${youtubeKey}`;
+      
+      const ytResp = await fetch(ytUrl);
+      const ytData = await ytResp.json();
+      
+      if (ytData.items && ytData.items.length > 0) {
+        const videoId = ytData.items[0].id.videoId;
+        videoUrl = `https://www.youtube.com/embed/${videoId}`;
+      }
+    } catch (e) {
+      console.error('Failed to fetch YouTube video:', e);
+    }
+    
+    parsedContent.videoUrl = videoUrl;
 
     return NextResponse.json({ data: parsedContent, success: true });
   } catch (error: any) {
